@@ -1,0 +1,75 @@
+
+##### Server connection details: the server to use to convert UDL to XML.
+[Server]
+
+host = ""
+port = ""
+namespace = ""
+user = ""
+password = ""
+https = false
+
+
+##### Repository details
+[Repo]
+
+# The type of reporitory:
+# "directory": a filesystem directory, configured under [Directory]
+# "github": a github tag, configured under [GitHub]
+type = "github"
+
+# The encoding of the source files; use valid Python encoding string,
+# e.g. UTF-8 or CP1252. Default is UTF-8.
+encoding = "UTF-8"
+
+# The type of source code export: "xml" or "udl" (default).
+srctype = "udl"
+
+# Directory, relative to the repository root, to search for source
+# files to include.
+srcdir = "src"
+
+# Directory to search for CSP files, if any.
+cspdir = "csp"
+
+# List of items to skip when building the export. Supports *-style wildcards.
+# The items are matched against their full path from the root of the repository.
+skip = [
+]
+
+
+##### GitHub details
+[GitHub]
+
+# GitHub username (repo owner) and repository
+user = ""
+repo = ""
+
+# What to create an export for. Anything for which GitHub can create a
+# zip, e.g. release tags, branch names, commit ids (sha), etc.
+tag = "master"
+
+# GitHub security token to use (only needed for private repositories)
+token = ""
+
+
+##### Details about the directory containing the source files
+[Directory]
+
+# The path to the repository/checkout
+path = ""
+
+
+##### Details about the export to build
+[Local]
+
+# File to place output in. Supports escapes:
+# {name}: top-level directory in filesystem or GitHub zip
+# {timestamp}: Current date/time in format YYYY-MM-DDThh-mm
+outfile = "{name}.xml"
+
+# Whether to create an Ensemble deployment file. If not, a standard
+# IRIS export file will be created. (Support for deployments is minimal,
+# check the documentation.)
+deployment = false
+
