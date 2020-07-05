@@ -24,9 +24,9 @@ class FsRepo:
         dir = self.config.Directory.path
         self.name = split(dir)[-1]
 
-        if self.config.Repo.srcdir:
-            dir = join(dir, self.config.Repo.srcdir)
-        is_flat = self.config.Repo.structure == 'flat'
+        if self.config.Source.srcdir:
+            dir = join(dir, self.config.Source.srcdir)
+        is_flat = self.config.Directory.structure == 'flat'
         
         for name in self.list_files(dir, is_flat):
             self.src_items.append(FsRepoItem(self, dir, name))
@@ -65,7 +65,7 @@ class FsRepoItem:
        
     @property
     def data(self):
-        encoding = self.parent.config.Repo.encoding
+        encoding = self.parent.config.Source.encoding
         with open(join(self.base_dir, self.item_name), 'r', encoding=encoding) as f:
             data = f.read()
         return data

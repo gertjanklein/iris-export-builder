@@ -26,7 +26,7 @@ def get_config(cfgfile) -> Namespace:
     
     # Converts specification(s) of files to skip to regexes
     config.skip_regexes = []
-    for spec in config.Repo.skip:
+    for spec in config.Source.skip:
         spec = spec.replace('.', '\\.')
         # Create valid regex for star
         spec = spec.replace('*', '.*')
@@ -43,20 +43,20 @@ class ConfigurationError(ValueError): pass
 def check(config:Namespace):
     """Check validity of values in the parsed configuration."""
 
-    # We need at least the Repo and Config sections
-    for name in ('Repo', 'Local'):
+    # We need at least the Source and Config sections
+    for name in ('Source', 'Local'):
         check_section(config, name)
     
-    # Check Repo
-    repo = config.Repo
-    check_oneof(repo, 'type', ('github', 'directory'))
-    check_oneof(repo, 'srctype', ('xml', 'udl'), 'udl')
-    check_encoding(repo, 'encoding', 'UTF-8')
+    # Check Source
+    src = config.Source
+    check_oneof(src, 'type', ('github', 'directory'))
+    check_oneof(src, 'srctype', ('xml', 'udl'), 'udl')
+    check_encoding(src, 'encoding', 'UTF-8')
     
     # Set some defaults if needed
-    check_default(repo, 'srcdir', '')
-    check_default(repo, 'cspdir', '')
-    check_default(repo, 'skip', [])
+    check_default(src, 'srcdir', '')
+    check_default(src, 'cspdir', '')
+    check_default(src, 'skip', [])
 
     # Check Local section
     local = config.Local
@@ -64,12 +64,13 @@ def check(config:Namespace):
     check_default(local, 'deployment', False)
     
     # Check optional sections
-    if repo.type == 'directory':
+    if src.type == 'directory':
         check_section(config, 'Directory')
         check_notempty(config.Directory, 'path')
+        check_oneof(config.Directory, 'structure', ('flat', 'nested'), 'nested')
         if not isabs(config.Directory.path):
             config.Directory.path = join(abspath(config.cfgdir), config.Directory.path)
-        if config.Repo.cspdir:
+        if src.cspdir:
             raise ConfigurationError("CSP items not yet supported in filesystem-type repository.")
     else:
         check_section(config, 'GitHub')
@@ -79,7 +80,7 @@ def check(config:Namespace):
         check_notempty(gh, 'tag')
         check_default(config.GitHub, 'token', '')
 
-    if repo.srctype == 'udl':
+    if src.srctype == 'udl':
         # Server needed for conversion to XML
         check_section(config, 'Server')
         svr = config.Server

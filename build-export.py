@@ -25,7 +25,7 @@ def main(inifile):
     config = get_config(inifile)
 
     # Setup basic auth handler for IRIS, if we need to convert UDL to XML
-    if config.Repo.srctype == 'udl':
+    if config.Source.srctype == 'udl':
         setup_urllib(config)
 
     # Log appends; create visible separation for this run
@@ -51,7 +51,7 @@ def main(inifile):
 def create_export(config, repo, outfile):
     """Create the export from the items in the repo object."""
     is_open = False
-    is_udl = config.Repo.srctype == 'udl'
+    is_udl = config.Source.srctype == 'udl'
 
     # Write IRIS items to export file. Write the opening Export tag as well.
     for item in repo.src_items:
@@ -264,12 +264,12 @@ def msgbox(msg, is_error=False):
 
 
 def get_repo(config):
-    if config.Repo.type == 'github':
+    if config.Source.type == 'github':
         from github import get_data
-    elif config.Repo.type == 'directory':
+    elif config.Source.type == 'directory':
         from fsrepo import get_data
     else:
-        raise ConfigurationError(f"Invalid repository type '{config.Repo.type}' in configuration.")
+        raise ConfigurationError(f"Invalid repository type '{config.Source.type}' in configuration.")
     return get_data(config)
 
 

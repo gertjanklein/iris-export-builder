@@ -1,19 +1,11 @@
+#####
+# Configuration file for copy-iris-items
+# Syntax is TOML (https://toml.io/en/).
 
-##### Server connection details: the server to use to convert UDL to XML.
-[Server]
+##### Details about the source files
+[Source]
 
-host = ""
-port = ""
-namespace = ""
-user = ""
-password = ""
-https = false
-
-
-##### Repository details
-[Repo]
-
-# The type of reporitory:
+# The type of location:
 # "directory": a filesystem directory, configured under [Directory]
 # "github": a github tag, configured under [GitHub]
 type = "github"
@@ -58,6 +50,22 @@ token = ""
 
 # The path to the repository/checkout
 path = ""
+
+# The structure of the export: "flat" or "nested". If flat, only the
+# directory specified above is scanned, which can improve performance.
+# Otherwise files are scanned for recursively. Default is nested.
+structure = "flat"
+
+
+##### Server connection details: the server to use to convert UDL to XML.
+[Server]
+
+host = ""
+port = ""
+namespace = ""
+user = ""
+password = ""
+https = false
 
 
 ##### Details about the export to build

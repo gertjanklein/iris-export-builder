@@ -40,7 +40,7 @@ class ZipRepo:
         
         zip_items = self.zip.infolist()
 
-        cfg = self.config.Repo
+        cfg = self.config.Source
         cspdir = cfg.cspdir
         srcdir = cfg.srcdir
 
@@ -102,7 +102,7 @@ class ZipRepoItem:
        
     @property
     def data(self):
-        encoding = self.parent.config.Repo.encoding
+        encoding = self.parent.config.Source.encoding
         with self.parent.zip.open(self.info) as f:
             data = f.read()
         data = data.decode(encoding)
@@ -130,7 +130,7 @@ class ZipRepoCspItem(ZipRepoItem):
             data = f.read()
         
         if self.is_text:
-            encoding = self.parent.config.Repo.encoding
+            encoding = self.parent.config.Source.encoding
             data = data.decode(encoding)
             data = data.replace('\r', '')
 

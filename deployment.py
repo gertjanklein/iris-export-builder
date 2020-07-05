@@ -28,7 +28,7 @@ DPL_NOTES_TPL = """
 def append_export_notes(config, repo, outfile):
     utc = datetime.datetime.utcnow().isoformat(sep=' ',timespec="seconds")
     docname = f"EnsExportNotes.EnsExportProduction_{utc.replace(':','-')}"
-    if config.Repo.type == 'github':
+    if config.Source.type == 'github':
         notes = f"Created from GitHub tag '{config.GitHub.tag}'"
     else:
         notes = f"Created from checkout directory {repo.name}"
