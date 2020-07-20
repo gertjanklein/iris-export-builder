@@ -28,6 +28,7 @@ def get_config(cfgfile) -> Namespace:
     config.skip_regexes = []
     for spec in config.Source.skip:
         spec = spec.replace('.', '\\.')
+        spec = spec.replace('\\', '\\\\')
         # Create valid regex for star
         spec = spec.replace('*', '.*')
         regex = re.compile(spec)

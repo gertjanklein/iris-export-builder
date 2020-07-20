@@ -1,6 +1,7 @@
 
 import sys, os
 from os.path import join, split, relpath, exists, isfile
+import logging
 
 from config import get_config
 
@@ -29,6 +30,10 @@ class FsRepo:
         is_flat = self.config.Directory.structure == 'flat'
         
         for name in self.list_files(dir, is_flat):
+            skip = any(rx.match(name) for rx in self.config.skip_regexes)
+            if skip:
+                logging.debug('Skipping %s because config requested so', name)
+                continue
             self.src_items.append(FsRepoItem(self, dir, name))
 
 
