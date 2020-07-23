@@ -19,10 +19,10 @@ srctype = "udl"
 
 # Directory, relative to the repository root, to search for source
 # files to include.
-srcdir = "src"
+srcdir = 'src'
 
 # Directory to search for CSP files, if any.
-cspdir = "csp"
+cspdir = 'csp'
 
 # List of items to skip when building the export. Supports *-style wildcards.
 # The items are matched against their full path from the root of the repository.
@@ -42,14 +42,14 @@ repo = ""
 tag = "master"
 
 # GitHub security token to use (only needed for private repositories)
-token = ""
+token = ''
 
 
 ##### Details about the directory containing the source files
 [Directory]
 
 # The path to the repository/checkout
-path = ""
+path = ''
 
 # The structure of the export: "flat" or "nested". If flat, only the
 # directory specified above is scanned, which can improve performance.
@@ -64,7 +64,7 @@ host = ""
 port = ""
 namespace = ""
 user = ""
-password = ""
+password = ''
 https = false
 
 
@@ -74,7 +74,7 @@ https = false
 # File to place output in. Supports escapes:
 # {name}: top-level directory in filesystem or GitHub zip
 # {timestamp}: Current date/time in format YYYY-MM-DDThh-mm
-outfile = "{name}.xml"
+outfile = '{name}.xml'
 
 # Whether to create an Ensemble deployment file. If not, a standard
 # IRIS export file will be created. (Support for deployments is minimal,
@@ -84,5 +84,5 @@ deployment = false
 # Directory for the log file. If empty, the log file is placed adjacent to
 # the configuration file. It will always have the name of the config file,
 # with ".toml" replaced with ".log".
-logdir = ""
+logdir = ''
 
