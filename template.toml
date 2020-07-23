@@ -68,7 +68,7 @@ password = ""
 https = false
 
 
-##### Details about the export to build
+##### Details about the export to build and logging
 [Local]
 
 # File to place output in. Supports escapes:
@@ -80,4 +80,9 @@ outfile = "{name}.xml"
 # IRIS export file will be created. (Support for deployments is minimal,
 # check the documentation.)
 deployment = false
+
+# Directory for the log file. If empty, the log file is placed adjacent to
+# the configuration file. It will always have the name of the config file,
+# with ".toml" replaced with ".log".
+logdir = ""
 

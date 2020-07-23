@@ -63,6 +63,7 @@ def check(config:Namespace):
     local = config.Local
     check_notempty(local, 'outfile')
     check_default(local, 'deployment', False)
+    check_default(local, 'logdir', '')
     
     # Check optional sections
     if src.type == 'directory':

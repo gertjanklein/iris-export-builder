@@ -2,7 +2,7 @@
 # encoding: UTF-8
 
 import sys, os
-from os.path import dirname, join, isabs, abspath, exists, splitext, isfile
+from os.path import dirname, join, isabs, abspath, exists, splitext, isfile, basename
 import logging
 import urllib.request as urq
 import datetime
@@ -14,16 +14,20 @@ from config import get_config, ConfigurationError
 from deployment import append_export_notes
 
 
-def main(inifile):
-    # Set up logging to file next to ini file
-    setup_logging(inifile)
+def main(cfgfile):
+    # Initial logging setup: file next to ini file. Errors parsing the
+    # config file will be logged here.
+    setup_basic_logging(cfgfile)
     
     # Log unhandled exceptions
     sys.excepthook = unhandled_exception
 
     # Get configuration
-    config = get_config(inifile)
+    config = get_config(cfgfile)
 
+    # Set up logging to file next to config file
+    setup_logging(config)
+    
     # Setup basic auth handler for IRIS, if we need to convert UDL to XML
     if config.Source.srctype == 'udl':
         setup_urllib(config)
@@ -216,21 +220,51 @@ def setup_urllib(config):
     urq.install_opener(opener)
 
 
-def setup_logging(inifile):
-    """ Setup logging to file """
+def setup_basic_logging(cfgfile):
+    """ Initial logging setup: log to file next to config file """
 
     # Determine log file name
-    base, ext = splitext(inifile)
+    base, ext = splitext(cfgfile)
     if ext.lower() == '.toml':
         logfile = f'{base}.log'
     else:
-        logfile = f'{inifile}.log'
+        logfile = f'{cfgfile}.log'
     
+    # Create handler with delayed creation of log file
+    handlers = [logging.FileHandler(logfile, delay=True)]
+
     # Display what we log as-is, no level strings etc.
-    logging.basicConfig(
-        filename=abspath(logfile),
-        level=logging.DEBUG,
+    logging.basicConfig(handlers=handlers, level=logging.INFO,
         format='%(message)s')
+
+
+def setup_logging(config):
+    """ Final logging setup: allow log location override in config """
+
+    logdir = config.Local._get('logdir')
+
+    # Determine filename (without path)
+    base, ext = splitext(basename(config.cfgfile))
+    if ext.lower() == '.toml':
+        logfile = f'{base}.log'
+    else:
+        logfile = f'{base}.{ext}.log'
+
+    # Determine filename (with path)
+    name = join(logdir, logfile)
+    if not isabs(logdir):
+        # Logdir not absolute: make it relative to dir config file is in
+        name = join(dirname(config.cfgfile), name)
+
+    # Make sure the log directory exists
+    logdir = dirname(name)
+    os.makedirs(logdir, exist_ok=True)
+
+    # Replace the current logging handler with one using the newly
+    # determined path
+    logger = logging.getLogger()
+    logger.handlers.clear()
+    logger.handlers.append(logging.FileHandler(name, 'a'))
 
 
 def unhandled_exception(exc_type, exc_value, exc_traceback):
@@ -275,21 +309,21 @@ def get_repo(config):
 
 if __name__ == '__main__':
     if len(sys.argv) < 2:
-        msgbox(f"Usage: {sys.argv[0]} <inifile>", True)
+        msgbox(f"Usage: {sys.argv[0]} <cfgfile>", True)
         sys.exit(1)
 
-    inifile = sys.argv[1]
-    if not isabs(inifile) and not exists(inifile):
-        inifile = join(dirname(__file__), inifile)
+    cfgfile = sys.argv[1]
+    if not isabs(cfgfile) and not exists(cfgfile):
+        cfgfile = join(dirname(__file__), cfgfile)
     
-    if not exists(inifile) or not isfile(inifile):
-        msgbox(f"File {inifile} not found.\nUsage: {sys.argv[0]} <inifile>", True)
+    if not exists(cfgfile) or not isfile(cfgfile):
+        msgbox(f"File {cfgfile} not found.\nUsage: {sys.argv[0]} <cfgfile>", True)
         sys.exit(1)
     
-    if not isabs(inifile):
-        inifile = abspath(inifile)
+    if not isabs(cfgfile):
+        cfgfile = abspath(cfgfile)
     
-    main(inifile)
+    main(cfgfile)
     
     
 
