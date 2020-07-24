@@ -3,13 +3,12 @@ import sys
 import re
 from os.path import exists, isfile, isabs, dirname, abspath, join
 import json
-import codecs
-
-from typing import Tuple
 
 import toml
 
-from namespace import Namespace, dict2ns, ns2dict
+from namespace import Namespace, dict2ns, ns2dict, check_default
+from namespace import check_encoding, check_notempty, check_oneof
+from namespace import check_section, ConfigurationError
 
 
 def get_config(cfgfile) -> Namespace:
@@ -38,8 +37,6 @@ def get_config(cfgfile) -> Namespace:
 
 
 # =====
-
-class ConfigurationError(ValueError): pass
 
 def check(config:Namespace):
     """Check validity of values in the parsed configuration."""
@@ -90,52 +87,6 @@ def check(config:Namespace):
             check_notempty(svr, name)
         check_default(config.Server, 'https', False)
         
-
-def check_section(config:Namespace, name:str) -> Namespace:
-    """ Checks that a section with the sepcified name is present """
-
-    section = config._get(name)
-    if section is None:
-        raise ConfigurationError(f"Section {name} not found in configuration")
-    if not isinstance(section, Namespace):
-        raise ConfigurationError(f"Configuration error: {name} not a section")
-    return section
-
-def check_default(section:Namespace, name:str, default) -> bool:
-    """ Checks if a value is present, setting default if not """
-
-    value = section._get(name)
-    if value is None or value == '':
-        section[name] = default
-        return True
-    return False
-
-def check_oneof(section:Namespace, name:str, oneof:Tuple[str], default=None):
-    """ Raises if value not in supplied list of options """
-
-    value = section._get(name)
-    if (value is None or value == '') and not default is None:
-        section[name] = default
-        return
-    if value in oneof: return
-    raise ConfigurationError(f"Configuration error: {section._name}:{name} must be one of {str(oneof)}")
-
-def check_notempty(section:Namespace, name:str):
-    """ Raises if value not supplied or empty """
-
-    value = section._get(name)
-    if value: return
-    raise ConfigurationError(f"Configuration error: {section._name}:{name} must be present and non-empty")
-
-def check_encoding(section:Namespace, name:str, default):
-    if check_default(section, name, default): return
-    encoding = section[name]
-    try:
-        codecs.lookup(encoding)
-    except LookupError:
-        msg = f"Configuration error: {section._name}:{name}: '{encoding}' is an unrecognised encoding"
-        raise ConfigurationError(msg) from None
-
 
 # =====
 
