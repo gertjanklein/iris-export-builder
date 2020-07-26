@@ -6,15 +6,14 @@ import json
 
 import toml
 
-from namespace import Namespace, dict2ns, ns2dict, check_default
-from namespace import check_encoding, check_notempty, check_oneof
-from namespace import check_section, ConfigurationError
+import namespace as ns
+from namespace import ConfigurationError
 
 
-def get_config(cfgfile) -> Namespace:
+def get_config(cfgfile) -> ns.Namespace:
     """Parse the config file, check validity, return as Namespace."""
     
-    config = dict2ns(toml.load(cfgfile), '_name')
+    config = ns.dict2ns(toml.load(cfgfile))
 
     # Add config file and directory
     config.cfgfile = cfgfile
@@ -38,61 +37,61 @@ def get_config(cfgfile) -> Namespace:
 
 # =====
 
-def check(config:Namespace):
+def check(config:ns.Namespace):
     """Check validity of values in the parsed configuration."""
 
     # We need at least the Source and Config sections
     for name in ('Source', 'Local'):
-        check_section(config, name)
+        ns.check_section(config, name)
     
     # Check Source
     src = config.Source
-    check_oneof(src, 'type', ('github', 'directory'))
-    check_oneof(src, 'srctype', ('xml', 'udl'), 'udl')
-    check_encoding(src, 'encoding', 'UTF-8')
+    ns.check_oneof(src, 'type', ('github', 'directory'))
+    ns.check_oneof(src, 'srctype', ('xml', 'udl'), 'udl')
+    ns.check_encoding(src, 'encoding', 'UTF-8')
     
     # Set some defaults if needed
-    check_default(src, 'srcdir', '')
-    check_default(src, 'cspdir', '')
-    check_default(src, 'skip', [])
+    ns.check_default(src, 'srcdir', '')
+    ns.check_default(src, 'cspdir', '')
+    ns.check_default(src, 'skip', [])
 
     # Check Local section
     local = config.Local
-    check_notempty(local, 'outfile')
-    check_default(local, 'deployment', False)
-    check_default(local, 'logdir', '')
+    ns.check_notempty(local, 'outfile')
+    ns.check_default(local, 'deployment', False)
+    ns.check_default(local, 'logdir', '')
     
     # Check optional sections
     if src.type == 'directory':
-        check_section(config, 'Directory')
-        check_notempty(config.Directory, 'path')
-        check_oneof(config.Directory, 'structure', ('flat', 'nested'), 'nested')
+        ns.check_section(config, 'Directory')
+        ns.check_notempty(config.Directory, 'path')
+        ns.check_oneof(config.Directory, 'structure', ('flat', 'nested'), 'nested')
         if not isabs(config.Directory.path):
             config.Directory.path = join(abspath(config.cfgdir), config.Directory.path)
         if src.cspdir:
             raise ConfigurationError("CSP items not yet supported in filesystem-type repository.")
     else:
-        check_section(config, 'GitHub')
+        ns.check_section(config, 'GitHub')
         gh = config.GitHub
-        check_notempty(gh, 'user')
-        check_notempty(gh, 'repo')
-        check_notempty(gh, 'tag')
-        check_default(config.GitHub, 'token', '')
+        ns.check_notempty(gh, 'user')
+        ns.check_notempty(gh, 'repo')
+        ns.check_notempty(gh, 'tag')
+        ns.check_default(config.GitHub, 'token', '')
 
     if src.srctype == 'udl':
         # Server needed for conversion to XML
-        check_section(config, 'Server')
+        ns.check_section(config, 'Server')
         svr = config.Server
         for name in 'host,port,namespace,user,password'.split(','):
-            check_notempty(svr, name)
-        check_default(config.Server, 'https', False)
+            ns.check_notempty(svr, name)
+        ns.check_default(config.Server, 'https', False)
         
 
 # =====
 
 def main(cfgfile):
     config = get_config(cfgfile)
-    print(json.dumps(ns2dict(config), indent=2, default=str))
+    print(json.dumps(ns.ns2dict(config), indent=2, default=str))
 
 if __name__ == '__main__':
     if len(sys.argv) < 2:
