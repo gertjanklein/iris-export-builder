@@ -55,6 +55,12 @@ def check(config:ns.Namespace):
     ns.check_default(src, 'cspdir', '')
     ns.check_default(src, 'skip', [])
 
+    # Check Local section
+    local = config.Local
+    ns.check_notempty(local, 'outfile')
+    ns.check_default(local, 'deployment', False)
+    ns.check_default(local, 'logdir', '')
+    
     # Check CSP configuration
     if src.cspdir:
         csp = ns.check_section(config, 'CSP')
@@ -68,12 +74,10 @@ def check(config:ns.Namespace):
             ns.check_notempty(parser, 'item')
             ns.check_oneof(parser, 'nomatch', ('skip', 'error'), 'error')
         ns.check_oneof(csp, 'export', ('embed', 'separate'), 'embed')
-    
-    # Check Local section
-    local = config.Local
-    ns.check_notempty(local, 'outfile')
-    ns.check_default(local, 'deployment', False)
-    ns.check_default(local, 'logdir', '')
+        
+        # CSP items appear unsupported in deployments, so must be exported separately
+        if local.deployment and csp.export == 'embed':
+            raise ConfigurationError("When requesting a deployment, CSP export must be 'separate'.")
     
     # Check optional sections
     if src.type == 'directory':
