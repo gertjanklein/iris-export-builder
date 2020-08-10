@@ -30,6 +30,16 @@ skip = [
 ]
 
 
+# Details on what to do with CSP items
+[CSP]
+
+# How to handle the CSP export:
+# - embed: CSP items are added to the export file. This is the default.
+# - separate: a separate export file will be created for CSP items. The
+#     name of the file will be the export name with _csp appended.
+export = 'embed'
+
+
 # One or more parsers for CSP items. The parsers use a regular expression
 # to determine which part of a CSP path is the application, and which part
 # the actual item. This is needed as an IRIS export item makes this distinction.

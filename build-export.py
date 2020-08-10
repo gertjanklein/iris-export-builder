@@ -73,14 +73,18 @@ def create_export(config, repo, outfile):
             is_open = True
         outfile.write(extract_export_content(export) + '\n')
     
-    # If this is just CSP files, we must write the Export tag ourselves
-    if not is_open:
-        outfile.write('<?xml version="1.0" encoding="UTF-8"?>\n')
-        outfile.write('<Export generator="IRIS" version="26">\n')
-
-    # If any CSP items, append them to the export
     if repo.csp_items:
-        append_csp_items(config, repo, outfile)
+        if config.CSP.export == 'embed':
+            # If this is just CSP files, we must write the Export tag ourselves
+            if not is_open:
+                outfile.write('<?xml version="1.0" encoding="UTF-8"?>\n')
+                outfile.write('<Export generator="IRIS" version="26">\n')
+
+            # Append the items to the export
+            append_csp_items(config, repo, outfile)
+        else:
+            # Create a separate CSP export file
+            export_csp_separate(config, repo, outfile.name)
 
     # Append export notes to make export usable as a deployment 
     if config.Local.deployment:
@@ -112,6 +116,20 @@ def convert_to_xml(config, item):
     content = content.replace('\r', '')
 
     return content
+
+
+def export_csp_separate(config, repo, export_name):
+    """ Creates a separate output file with CSP items. """
+
+    base, ext = splitext(export_name)
+    export_name = base+'_csp'+ext
+
+    with open(export_name, 'w', encoding='UTF-8') as outfile:
+        outfile.write('<?xml version="1.0" encoding="UTF-8"?>\n')
+        # Version can be relatively old, nothing changed since then
+        outfile.write('<Export generator="Cache" version="25">\n')
+        append_csp_items(config, repo, outfile)
+        outfile.write('\n</Export>\n')
 
 
 def append_csp_items(config, repo, outfile):

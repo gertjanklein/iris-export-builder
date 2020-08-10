@@ -55,6 +55,7 @@ def check(config:ns.Namespace):
     ns.check_default(src, 'cspdir', '')
     ns.check_default(src, 'skip', [])
 
+    # Check CSP configuration
     if src.cspdir:
         csp = ns.check_section(config, 'CSP')
         if ns.check_default(csp, 'parsers', []):
@@ -66,6 +67,7 @@ def check(config:ns.Namespace):
             ns.check_notempty(parser, 'app')
             ns.check_notempty(parser, 'item')
             ns.check_oneof(parser, 'nomatch', ('skip', 'error'), 'error')
+        ns.check_oneof(csp, 'export', ('embed', 'separate'), 'embed')
     
     # Check Local section
     local = config.Local
