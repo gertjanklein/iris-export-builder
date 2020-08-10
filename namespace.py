@@ -44,6 +44,13 @@ def dict2ns(input:dict) -> Namespace:
         if isinstance(v, dict):
             ns[k] = dict2ns(v)
             ns[k]['_name'] = k
+        elif isinstance(v, list):
+            ns[k] = v
+            for i, v2 in enumerate(v):
+                if not isinstance(v2, dict):
+                    continue
+                v[i] = dict2ns(v2)
+                v[i]['_name'] = f'{k}[{i+1}]'
         else:
             ns[k] = v
     return ns
