@@ -30,6 +30,19 @@ skip = [
 ]
 
 
+# One or more parsers for CSP items. The parsers use a regular expression
+# to determine which part of a CSP path is the application, and which part
+# the actual item. This is needed as an IRIS export item makes this distinction.
+# Note that replacements can be hardcoded is needed.
+# The default parser assumes the first path component is the application,
+# unless that is 'csp', in which case the first two components are used.
+[[CSP.parsers]]
+regex = '((/csp)?/[^/]+)/(.+)'
+app = '\1'
+item = '\3'
+nomatch = 'error'
+
+
 ##### GitHub details
 [GitHub]
 

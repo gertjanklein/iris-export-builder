@@ -55,6 +55,18 @@ def check(config:ns.Namespace):
     ns.check_default(src, 'cspdir', '')
     ns.check_default(src, 'skip', [])
 
+    if src.cspdir:
+        csp = ns.check_section(config, 'CSP')
+        if ns.check_default(csp, 'parsers', []):
+            raise ConfigurationError("At least one [[CSP.parsers]] section for CSP items should be present.")
+        for i, parser in enumerate(csp.parsers):
+            if not isinstance(parser, ns.Namespace):
+                raise ConfigurationError(f'Parser {i+1} must be a section.')
+            ns.check_notempty(parser, 'regex')
+            ns.check_notempty(parser, 'app')
+            ns.check_notempty(parser, 'item')
+            ns.check_oneof(parser, 'nomatch', ('skip', 'error'), 'error')
+    
     # Check Local section
     local = config.Local
     ns.check_notempty(local, 'outfile')

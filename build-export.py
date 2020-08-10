@@ -3,6 +3,7 @@
 
 import sys, os
 from os.path import dirname, join, isabs, abspath, exists, splitext, isfile, basename
+import re
 import logging
 import urllib.request as urq
 import datetime
@@ -79,7 +80,7 @@ def create_export(config, repo, outfile):
 
     # If any CSP items, append them to the export
     if repo.csp_items:
-        append_csp_items(repo, outfile)
+        append_csp_items(config, repo, outfile)
 
     # Append export notes to make export usable as a deployment 
     if config.Local.deployment:
@@ -113,19 +114,14 @@ def convert_to_xml(config, item):
     return content
 
 
-def append_csp_items(repo, outfile):
+def append_csp_items(config, repo, outfile):
     for item in repo.csp_items:
         name = item.filename
-        logging.info(f'Adding {name}')
-
-        # Split name in CSP app and item
-        parts = name[1:].split('/')
-        if parts[0] == 'csp' and len(parts) > 2:
-            app = '/' + '/'.join(parts[0:2])
-            cspname = '/'.join(parts[2:])
-        else:
-            app = '/' + parts[0]
-            cspname = '/'.join(parts[1:])
+        split = split_csp(config, name)
+        if not split:
+            continue
+        app, cspname = split
+        logging.info(f'Adding {name} as app "{app}", item "{cspname}".')
 
         # Get CSP item data
         data = item.data
@@ -134,6 +130,41 @@ def append_csp_items(repo, outfile):
             append_csp_text(app, cspname, data, outfile)
         else:
             append_csp_binary(app, cspname, data, outfile)
+
+
+def split_csp(config, name:str):
+    """ Split CSP item in app and page. """
+    
+    for i, parser in enumerate(config.CSP.parsers):
+        match = re.fullmatch(parser.regex, name)
+        if not match:
+            if parser.nomatch != 'error':
+                logging.debug(f"Item {name} does not match regex in parser {i+1} ('{parser.regex}').")
+                continue
+            raise ConfigurationError(f"Error: item {name} does not match regex in parser {i+1} ('{parser.regex}').")
+        app = parser.app
+        for i, v in enumerate(match.groups()):
+            if v is not None:
+                app = app.replace(f'\\{i+1}', v)
+        page = parser.item
+        for i, v in enumerate(match.groups()):
+            if v is not None:
+                page = page.replace(f'\\{i+1}', v)
+
+        # Some basic validity checks:
+        if app[0] != '/':
+            raise ValueError('Invalid application: must start with a slash')
+        if app[-1] == '/':
+            raise ValueError('Invalid application: must not end with a slash')
+        
+        if page[0] == '/':
+            raise ValueError('Invalid page: must not start with a slash')
+        if page[-1] == '/':
+            raise ValueError('Invalid page: must not end with a slash')
+        
+        return app, page
+    
+    return None
 
 
 def append_csp_text(app, name, data, outfile):
