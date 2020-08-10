@@ -44,6 +44,30 @@ or "udl") determine which of the remaining sections are relevant. Other
 configuration settings include the source file encoding, and where in
 the checkout to find CSP and source files.
 
+### CSP
+
+This section further configures how CSP items are handled, and is only
+consulted when Source.cspdir is nonempty. This main section configures
+how the CSP export is to be done: embedded in the main export, or as a
+separate file. One or more subsections called CSP.parsers can be specified
+that specify how to deal with individual items.
+
+### CSP.parsers
+
+One or more of this subsection can occur. The main goal of these
+sections to specify how to split a CSP item into an application and item
+part; this is required by the IRIS export format. The parsers specify a
+regular expression to match against, and are tried in turn. Parsers can
+specify that they must match; if they then don't, a configuration error
+is raised.
+
+If no parser matches an item, and none specifies a match is required, the
+item will simply be skipped. This will be logged in the logfile.
+
+A default parser is present in the template configuration, that attempts
+to guess how to split off the application. An application-specific parser
+is probably better.
+
 ### GitHub
 
 If the sources to create an export for reside on GitHub, this section
@@ -54,14 +78,14 @@ repositories, a security token can be specified.
 ### Directory
 
 If the sources reside on the local filesystem (e.g., a Subversion
-checkout), this section specifies where to find it.
+checkout), this section specifies where to find them.
 
 ### Server
 
-This section specifies details of the server to connect to (hostname or
-IP address, port, credentials, namespace). The port to specify is the
-web server port (the same one the management portal uses), not the
-superserver port.
+If the source is in UDL format, it must be converted to XML before it
+can become part of an export. A Caché (2017+) or IRIS server is needed
+to do this conversion. This section specifies details of the server to
+connect to: hostname or IP address, port, credentials, namespace.
 
 ### Local
 

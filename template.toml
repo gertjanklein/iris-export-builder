@@ -42,14 +42,28 @@ export = 'embed'
 
 # One or more parsers for CSP items. The parsers use a regular expression
 # to determine which part of a CSP path is the application, and which part
-# the actual item. This is needed as an IRIS export item makes this distinction.
-# Note that replacements can be hardcoded is needed.
-# The default parser assumes the first path component is the application,
+# the actual item. This is needed as an XML export item makes this
+# distinction. Note that replacements can be hardcoded if needed.
+# The default parser below assumes the first path component is the application,
 # unless that is 'csp', in which case the first two components are used.
+# Capture groups (surrounded by parenthesis) can be referred to in the
+# replacement strings, using "\<group nr>". In the default parser below, the
+# first group is used as application name, and the third one as item name.
+# (The second one captures the the optional '/csp' part of the application name.
+# It can be either '/csp' or empty, and is not used here.)
+# Note the double brackets around the section name: they denote that
+# more than one of these sections can be present.
 [[CSP.parsers]]
+
+# The regular expression to use to match application and item.
 regex = '((/csp)?/[^/]+)/(.+)'
+# The application part; can use a capture group, e.g. '\1', or be hardcoded.
 app = '\1'
+# The item part can also use capture groups
 item = '\3'
+# What to do if a CSP item does not match this item:
+# - error: raise a configuration error (details will be logged)
+# - skip: just skip this item, and try the next parser (if any).
 nomatch = 'error'
 
 
@@ -83,11 +97,16 @@ structure = "flat"
 ##### Server connection details: the server to use to convert UDL to XML.
 [Server]
 
+# Hostname or IP address
 host = ""
+# Caché/IRIS internal web server port
 port = ""
-namespace = ""
+# Namespace to use (any namespace will do)
+namespace = "USER"
+# Credentials; will be used in a basic auth header
 user = ""
 password = ''
+# Whether to connect with HTTPS; should normally be off
 https = false
 
 
