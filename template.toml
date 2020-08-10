@@ -1,5 +1,5 @@
 #####
-# Configuration file for copy-iris-items
+# Configuration file for iris-export-builder
 # Syntax is TOML (https://toml.io/en/).
 
 ##### Details about the source files
