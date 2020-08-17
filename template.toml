@@ -55,11 +55,12 @@ export = 'embed'
 # It can be either '/csp' or empty, and is not used here.)
 # Note the double brackets around the section name: they denote that
 # more than one of these sections can be present.
-# In most cases, is a singel dedicated application is used, a simple
-# configuration would be:
+# In most cases, is a single dedicated application is used, a simple
+# configuration would be (assuming the application is called 'app'):
 #   regex = '/app/(.+)'
 #   app = '/app'
 #   item = '\1'
+# If more than one parser is present, the first match (if any) is used.
 [[CSP.parsers]]
 
 # The regular expression to use to match application and item.
