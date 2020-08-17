@@ -44,10 +44,9 @@ def main(cfgfile):
 
     # Create an export file containing all the items
     with open(export_name, 'w', encoding='UTF-8') as outfile:
-        create_export(config, repo, outfile)
+        count = create_export(config, repo, outfile)
     
     # Give some feedback
-    count = len(repo.src_items) + len(repo.csp_items)
     logging.info(f"\nDone; added {count} items to export in {export_name}.\n\n")
     msgbox(f"Exported {count} items to {export_name}.")
 
@@ -57,6 +56,8 @@ def create_export(config, repo, outfile):
     """Create the export from the items in the repo object."""
     is_open = False
     is_udl = config.Source.srctype == 'udl'
+
+    count = 0
 
     # Write IRIS items to export file. Write the opening Export tag as well.
     for item in repo.src_items:
@@ -72,6 +73,7 @@ def create_export(config, repo, outfile):
             outfile.write(extract_export_header(export) + '\n')
             is_open = True
         outfile.write(extract_export_content(export) + '\n')
+        count += 1
     
     if repo.csp_items:
         if config.CSP.export == 'embed':
@@ -81,7 +83,7 @@ def create_export(config, repo, outfile):
                 outfile.write('<Export generator="IRIS" version="26">\n')
 
             # Append the items to the export
-            append_csp_items(config, repo, outfile)
+            count += append_csp_items(config, repo, outfile)
         else:
             # Create a separate CSP export file
             export_csp_separate(config, repo, outfile.name)
@@ -92,6 +94,8 @@ def create_export(config, repo, outfile):
 
     # Close Export element
     outfile.write('</Export>\n')
+
+    return count
 
 
 def convert_to_xml(config, item):
@@ -133,6 +137,7 @@ def export_csp_separate(config, repo, export_name):
 
 
 def append_csp_items(config, repo, outfile):
+    count = 0
     for item in repo.csp_items:
         name = item.filename
         split = split_csp(config, name)
@@ -140,6 +145,7 @@ def append_csp_items(config, repo, outfile):
             continue
         app, cspname = split
         logging.info(f'Adding {name} as app "{app}", item "{cspname}".')
+        count += 1
 
         # Get CSP item data
         data = item.data
@@ -148,6 +154,8 @@ def append_csp_items(config, repo, outfile):
             append_csp_text(app, cspname, data, outfile)
         else:
             append_csp_binary(app, cspname, data, outfile)
+
+    return count
 
 
 def split_csp(config, name:str):
