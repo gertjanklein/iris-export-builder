@@ -11,7 +11,9 @@
 type = "github"
 
 # The encoding of the source files; use valid Python encoding string,
-# e.g. UTF-8 or CP1252. Default is UTF-8.
+# e.g. UTF-8 or CP1252. For a list of possible values, see
+# https://docs.python.org/3.7/library/codecs.html#standard-encodings
+# Default is UTF-8.
 encoding = "UTF-8"
 
 # The type of source code export: "xml" or "udl" (default).
@@ -53,6 +55,11 @@ export = 'embed'
 # It can be either '/csp' or empty, and is not used here.)
 # Note the double brackets around the section name: they denote that
 # more than one of these sections can be present.
+# In most cases, is a singel dedicated application is used, a simple
+# configuration would be:
+#   regex = '/app/(.+)'
+#   app = '/app'
+#   item = '\1'
 [[CSP.parsers]]
 
 # The regular expression to use to match application and item.
@@ -115,6 +122,7 @@ https = false
 
 # File to place output in. Supports escapes:
 # {name}: top-level directory in filesystem or GitHub zip
+# {cfgname}: name (without extension) of configuration file
 # {timestamp}: Current date/time in format YYYY-MM-DDThh-mm
 outfile = '{name}.xml'
 

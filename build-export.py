@@ -230,7 +230,11 @@ def get_export_name(config, repo_name):
     """ Determines the output (export) filename."""
 
     ts = datetime.datetime.now().strftime('%Y-%m-%dT%H-%M')
-    replacements = { 'name': repo_name, 'timestamp': ts }
+    cfgname = splitext(basename(config.cfgfile))[0]
+    replacements = {
+        'name': repo_name,
+        'timestamp': ts,
+        'cfgname': cfgname }
 
     name = config.Local.outfile
     try:
