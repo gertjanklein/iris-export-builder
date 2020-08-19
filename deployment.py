@@ -64,8 +64,15 @@ def append_export_notes(config, repo, outfile):
         # Remove xml suffix, if present
         if config.Source.srctype == 'xml' and itemtype.lower() == 'xml':
             basename, itemtype = basename.rsplit('.', 1)
-        projectitems.append(f'<ProjectItem name="{basename}" type="{itemtype.upper()}"></ProjectItem>')
-        items.append(f'<Item num="{i+1}">{basename}.{itemtype.upper()}</Item>')
+        itemtype = itemtype.upper()
+        items.append(f'<Item num="{i+1}">{basename}.{itemtype}</Item>')
+        if itemtype in ('INC', 'INT'):
+            # For Studio projects, the item type of include files etc is MAC.
+            # The actual type is then part of the name.
+            basename = f"{basename}.{itemtype}"
+            itemtype = 'MAC'
+        projectitems.append(f'<ProjectItem name="{basename}" type="{itemtype}"></ProjectItem>')
+    
     # Add the name of the deployment to the project
     projectitems.append(f'<ProjectItem name="EnsExportNotes.{docname}.PTD" type="PTD"></ProjectItem>')
 
