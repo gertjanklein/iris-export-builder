@@ -24,7 +24,7 @@ def get_config(cfgfile, log_callback:Callable[[ns.Namespace],None]=None) -> ns.N
     # Minimal check for logging configuration
     local = ns.check_section(config, 'Local')
     ns.check_default(local, 'logdir', '')
-    levels = 'critical,error,warning,info,debug'.split(',')
+    levels = 'debug,info,warning,error,critical'.split(',')
     ns.check_oneof(local, 'loglevel', levels, 'info')
 
     # Call callback to do final setup of logging

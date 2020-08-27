@@ -137,3 +137,6 @@ deployment = false
 # with ".toml" replaced with ".log".
 logdir = ''
 
+# Logging level. One of 'debug', 'info', 'warning', 'error', or 'critical'.
+loglevel = 'info'
+
