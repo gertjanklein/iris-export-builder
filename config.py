@@ -3,6 +3,8 @@ import sys
 import re
 from os.path import exists, isfile, isabs, dirname, abspath, join
 import json
+import logging
+from typing import Callable
 
 import toml
 
@@ -10,7 +12,7 @@ import namespace as ns
 from namespace import ConfigurationError
 
 
-def get_config(cfgfile) -> ns.Namespace:
+def get_config(cfgfile, log_callback:Callable[[ns.Namespace],None]=None) -> ns.Namespace:
     """Parse the config file, check validity, return as Namespace."""
     
     config = ns.dict2ns(toml.load(cfgfile))
@@ -18,6 +20,15 @@ def get_config(cfgfile) -> ns.Namespace:
     # Add config file and directory
     config.cfgfile = cfgfile
     config.cfgdir = dirname(cfgfile)
+
+    # Minimal check for logging configuration
+    local = ns.check_section(config, 'Local')
+    ns.check_default(local, 'logdir', '')
+    levels = 'critical,error,warning,info,debug'.split(',')
+    ns.check_oneof(local, 'loglevel', levels, 'info')
+
+    # Call callback to do final setup of logging
+    log_callback(config)
 
     # Make sure configuration is complete
     check(config)
@@ -66,6 +77,7 @@ def check(config:ns.Namespace):
     ns.check_notempty(local, 'outfile')
     ns.check_default(local, 'deployment', False)
     ns.check_default(local, 'logdir', '')
+    ns.check_default(local, 'loglevel', '')
     
     # Check CSP configuration
     if src.cspdir:
@@ -89,7 +101,9 @@ def check(config:ns.Namespace):
     if src.type == 'directory':
         ns.check_section(config, 'Directory')
         ns.check_notempty(config.Directory, 'path')
-        ns.check_oneof(config.Directory, 'structure', ('flat', 'nested'), 'nested')
+        if 'structure' in config.Directory:
+            logging.warning("Warning: setting 'structure' in section Directory no longer used.")
+            del config.Directory.structure
         if not isabs(config.Directory.path):
             config.Directory.path = join(abspath(config.cfgdir), config.Directory.path)
     else:

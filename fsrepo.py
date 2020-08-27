@@ -31,7 +31,6 @@ class FsRepo:
         srcdir = cfg.srcdir
         datadir = cfg.datadir
 
-        is_flat = self.config.Directory.structure == 'flat'
         encoding = self.config.Source.encoding
 
         for name in self.list_files(dir, False):

@@ -23,19 +23,13 @@ def main(cfgfile):
     # Log unhandled exceptions
     sys.excepthook = unhandled_exception
 
-    # Get configuration
-    config = get_config(cfgfile)
-
-    # Set up logging to file next to config file
-    setup_logging(config)
+    # Get configuration and do final logging setup
+    config = get_config(cfgfile, setup_logging)
     
     # Setup basic auth handler for IRIS, if we need to convert UDL to XML
     if config.Source.srctype == 'udl':
         setup_urllib(config)
 
-    # Log appends; create visible separation for this run
-    logging.info(f"\n\n===== Starting at {str(datetime.datetime.now()).split('.')[0]}")
-    
     # Get object representing repo
     repo = get_repo(config)
 
@@ -47,7 +41,7 @@ def main(cfgfile):
         count = create_export(config, repo, outfile)
     
     # Give some feedback
-    logging.info(f"\nDone; added {count} items to export in {export_name}.\n\n")
+    logging.info(f"\nDone; added {count} items to export in {export_name}.\n")
     msgbox(f"Exported {count} items to {export_name}.")
 
     
@@ -313,7 +307,8 @@ def setup_basic_logging(cfgfile):
 def setup_logging(config):
     """ Final logging setup: allow log location override in config """
 
-    logdir = config.Local._get('logdir')
+    logdir:str = config.Local.logdir
+    loglevel:str = config.Local.loglevel
 
     # Determine filename (without path)
     base, ext = splitext(basename(config.cfgfile))
@@ -338,6 +333,12 @@ def setup_logging(config):
     logger.handlers.clear()
     logger.handlers.append(logging.FileHandler(name, 'a'))
 
+    if loglevel is not None:
+        logger.setLevel(loglevel.upper())
+
+    # Log appends; create visible separation for this run
+    logging.info(f"\n\n===== Starting at {str(datetime.datetime.now()).split('.')[0]}")
+    
 
 def unhandled_exception(exc_type, exc_value, exc_traceback):
     """ Handle otherwise unhandled exceptions by logging them """
