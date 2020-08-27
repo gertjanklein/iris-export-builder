@@ -91,7 +91,7 @@ def create_export(config, repo, outfile):
             count += append_csp_items(config, repo, outfile)
         else:
             # Create a separate CSP export file
-            export_csp_separate(config, repo, outfile.name)
+            count += export_csp_separate(config, repo, outfile.name)
 
     # Append export notes to make export usable as a deployment 
     if config.Local.deployment:
@@ -137,8 +137,9 @@ def export_csp_separate(config, repo, export_name):
         outfile.write('<?xml version="1.0" encoding="UTF-8"?>\n')
         # Version can be relatively old, nothing changed since then
         outfile.write('<Export generator="Cache" version="25">\n')
-        append_csp_items(config, repo, outfile)
+        count = append_csp_items(config, repo, outfile)
         outfile.write('\n</Export>\n')
+    return count
 
 
 def append_csp_items(config, repo, outfile):
