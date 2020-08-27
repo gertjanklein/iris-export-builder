@@ -31,9 +31,16 @@ class Namespace(SimpleNamespace):
         except AttributeError:
             return self.__dict__[name]
     
+    def __delattr__(self, name):
+        """Add support for deleting values."""
+        self.__dict__.__delattr__(name)
+
     def _get(self, key, default=None):
         """Retrieve a value, or default if not found."""
         return self.__dict__.get(key, default)
+
+    def __contains__(self, name):
+        return self.__dict__.__contains__(name)
 
 
 def dict2ns(input:dict) -> Namespace:
