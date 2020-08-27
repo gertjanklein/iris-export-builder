@@ -75,6 +75,17 @@ def create_export(config, repo, outfile):
         outfile.write(extract_export_content(export) + '\n')
         count += 1
     
+    for item in repo.data_items:
+        logging.info(f'Adding {item.name}')
+        export = item.data
+        
+        if not is_open:
+            # outfile.write('<?xml version="1.0" encoding="UTF-8"?>\n')
+            outfile.write(extract_export_header(export) + '\n')
+            is_open = True
+        outfile.write(extract_export_content(export) + '\n')
+        count += 1
+    
     if repo.csp_items:
         if config.CSP.export == 'embed':
             # If this is just CSP files, we must write the Export tag ourselves
@@ -139,7 +150,7 @@ def export_csp_separate(config, repo, export_name):
 def append_csp_items(config, repo, outfile):
     count = 0
     for item in repo.csp_items:
-        name = item.filename
+        name = item.relpath
         split = split_csp(config, name)
         if not split:
             continue

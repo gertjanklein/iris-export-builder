@@ -52,8 +52,14 @@ def check(config:ns.Namespace):
     
     # Set some defaults if needed
     ns.check_default(src, 'srcdir', '')
+    ns.check_default(src, 'datadir', '')
     ns.check_default(src, 'cspdir', '')
     ns.check_default(src, 'skip', [])
+    
+    # Strip leading slash if present, we don't need it
+    if src.srcdir == '/': src.srcdir = src.srcdir[1:]
+    if src.datadir == '/': src.datadir = src.datadir[1:]
+    if src.cspdir == '/': src.cspdir = src.cspdir[1:]
 
     # Check Local section
     local = config.Local
@@ -86,8 +92,6 @@ def check(config:ns.Namespace):
         ns.check_oneof(config.Directory, 'structure', ('flat', 'nested'), 'nested')
         if not isabs(config.Directory.path):
             config.Directory.path = join(abspath(config.cfgdir), config.Directory.path)
-        if src.cspdir:
-            raise ConfigurationError("CSP items not yet supported in filesystem-type repository.")
     else:
         ns.check_section(config, 'GitHub')
         gh = config.GitHub

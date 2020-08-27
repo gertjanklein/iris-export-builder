@@ -26,6 +26,11 @@ srcdir = 'src'
 # Directory to search for CSP files, if any.
 cspdir = 'csp'
 
+# Directory to search for data files to include, e.g. lookup tables, system
+# default settings, etc. Data files are expected to be in XML export format
+# already, as created by $System.OBJ.Export().
+datadir = ''
+
 # List of items to skip when building the export. Supports *-style wildcards.
 # The items are matched against their full path from the root of the repository.
 skip = [
@@ -95,11 +100,6 @@ token = ''
 
 # The path to the repository/checkout
 path = ''
-
-# The structure of the export: "flat" or "nested". If flat, only the
-# directory specified above is scanned, which can improve performance.
-# Otherwise files are scanned for recursively. Default is nested.
-structure = "flat"
 
 
 ##### Server connection details: the server to use to convert UDL to XML.

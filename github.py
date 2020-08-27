@@ -6,7 +6,7 @@ from os.path import exists, isfile, splitext
 import urllib.request as urq
 import logging
 import io
-import zipfile
+from zipfile import ZipFile, ZipInfo
 
 from config import get_config
 
@@ -23,12 +23,13 @@ def get_data(config):
 class ZipRepo:
     """Handle a zipped repository."""
 
-    def __init__(self, config, zip:zipfile.ZipFile):
+    def __init__(self, config, zip:ZipFile):
         super().__init__() 
         self.config = config
         self.zip = zip
 
         self.src_items:ZipRepoItem = []
+        self.data_items:ZipRepoItem = []
         self.csp_items:ZipRepoCspItem = []
         self.name:str = ''
 
@@ -43,6 +44,7 @@ class ZipRepo:
         cfg = self.config.Source
         cspdir = cfg.cspdir
         srcdir = cfg.srcdir
+        datadir = cfg.datadir
 
         # The first item in the zip file is the top-level directory
         base = zip_items[0].filename
@@ -67,22 +69,30 @@ class ZipRepo:
                 logging.debug('Skipping %s because config requested so', tmp)
                 continue
 
+            # Configure separately for CSP and source?
+            encoding = self.config.Source.encoding
+
             if parts[1] == cspdir:
-                self.csp_items.append(ZipRepoCspItem(self, item, cspdir))
+                self.csp_items.append(ZipRepoCspItem(self.zip, item, cspdir, encoding))
+            
+            # Data is XML export, already encoded in UTF-8
+            elif parts[1] == datadir:
+                self.data_items.append(ZipRepoItem(self.zip, item, cspdir, 'UTF-8'))
             
             elif srcdir in ('', parts[1]):
                 # Non-CSP items always have a type
                 if not '.' in parts[-1]: continue
-                self.src_items.append(ZipRepoItem(self, item, srcdir))
+                self.src_items.append(ZipRepoItem(self.zip, item, srcdir, encoding))
 
 
 class ZipRepoItem:
     """Normal repostitory item."""
-    def __init__(self, parent:ZipRepo, info:zipfile.ZipInfo, prefix):
+    def __init__(self, zip:ZipFile, info:ZipInfo, prefix, encoding):
         super().__init__()
-        self.parent = parent
+        self.zip = zip
         self.info = info
         self.prefix = prefix
+        self.encoding = encoding
 
     @property
     def name(self):
@@ -93,17 +103,9 @@ class ZipRepoItem:
         return '.'.join(parts)
 
     @property
-    def filename(self):
-         # Skip base directory name
-        parts = self.info.filename.split('/')[1:]
-        if parts[0] == self.prefix:
-            parts = parts[1:]
-        return '/' + '/'.join(parts)
-       
-    @property
     def data(self):
-        encoding = self.parent.config.Source.encoding
-        with self.parent.zip.open(self.info) as f:
+        encoding = self.encoding
+        with self.zip.open(self.info) as f:
             data = f.read()
         data = data.decode(encoding)
 
@@ -116,6 +118,14 @@ class ZipRepoCspItem(ZipRepoItem):
     """CSP-type repository item."""
 
     @property
+    def relpath(self):
+         # Skip base directory name
+        parts = self.info.filename.split('/')[1:]
+        if parts[0] == self.prefix:
+            parts = parts[1:]
+        return '/' + '/'.join(parts)
+       
+    @property
     def is_text(self):
         name = self.info.filename
         ext = splitext(name)[1]
@@ -126,11 +136,11 @@ class ZipRepoCspItem(ZipRepoItem):
 
     @property
     def data(self):
-        with self.parent.zip.open(self.info) as f:
+        with self.zip.open(self.info) as f:
             data = f.read()
         
         if self.is_text:
-            encoding = self.parent.config.Source.encoding
+            encoding = self.encoding
             data = data.decode(encoding)
             data = data.replace('\r', '')
 
@@ -145,7 +155,7 @@ def get_zip(url, token):
     rq = urq.Request(url, headers=headers)
     with urq.urlopen(rq) as rsp:
         data = io.BytesIO(rsp.read())
-    return zipfile.ZipFile(data)
+    return ZipFile(data)
 
 
 
@@ -155,7 +165,7 @@ def main(cfgfile):
 
     for item in zr.src_items:
         zi = item.info
-        print(item.filename, zi.filename)
+        print(item.relpath, zi.filename)
 
 if __name__ == "__main__":
     if len(sys.argv) < 2:

@@ -1,6 +1,6 @@
 
 import sys, os
-from os.path import join, split, relpath, exists, isfile
+from os.path import join, split, relpath, exists, isfile, splitext
 import logging
 
 from config import get_config
@@ -16,6 +16,7 @@ class FsRepo:
         self.config = config
 
         self.src_items = []
+        self.data_items = []
         self.csp_items = []
         self.name:str = ''
 
@@ -25,16 +26,45 @@ class FsRepo:
         dir = self.config.Directory.path
         self.name = split(dir)[-1]
 
-        if self.config.Source.srcdir:
-            dir = join(dir, self.config.Source.srcdir)
+        cfg = self.config.Source
+        cspdir = cfg.cspdir
+        srcdir = cfg.srcdir
+        datadir = cfg.datadir
+
         is_flat = self.config.Directory.structure == 'flat'
-        
-        for name in self.list_files(dir, is_flat):
+        encoding = self.config.Source.encoding
+
+        for name in self.list_files(dir, False):
             skip = any(rx.match(name) for rx in self.config.skip_regexes)
             if skip:
                 logging.debug('Skipping %s because config requested so', name)
                 continue
-            self.src_items.append(FsRepoItem(self, dir, name))
+            
+            parts = name.split(os.sep)
+
+            if parts[0] == cspdir:
+                base = join(dir, cspdir)
+                name = relpath(join(dir, name), base)
+                if os.sep != '/':
+                    name = '/'.join(name.split(os.sep))
+                self.csp_items.append(FsRepoCspItem(base, name, encoding))
+
+            elif parts[0] == datadir:
+                base = join(dir, datadir)
+                name = relpath(join(dir, name), base)
+                if os.sep != '/':
+                    name = '/'.join(name.split(os.sep))
+                self.data_items.append(FsRepoItem(base, name, encoding))
+
+            elif srcdir in ('', parts[0]):
+                base = join(dir, srcdir)
+                name = relpath(join(dir, name), base)
+                if os.sep != '/':
+                    name = '/'.join(name.split(os.sep))
+                self.src_items.append(FsRepoItem(base, name, encoding))
+
+            else:
+                logging.debug(f"Skipping {name} as it's not in a configured directory.")
 
 
     def list_files(self, dir, is_flat):
@@ -54,11 +84,11 @@ class FsRepo:
 
 
 class FsRepoItem:
-    def __init__(self, parent, base_dir, name):
+    def __init__(self, base_dir, name, encoding):
         super().__init__()
-        self.parent = parent
         self.base_dir = base_dir
         self.item_name = name
+        self.encoding = encoding
 
     @property
     def name(self):
@@ -70,9 +100,40 @@ class FsRepoItem:
        
     @property
     def data(self):
-        encoding = self.parent.config.Source.encoding
+        encoding = self.encoding
         with open(join(self.base_dir, self.item_name), 'r', encoding=encoding) as f:
             data = f.read()
+        return data
+
+
+class FsRepoCspItem(FsRepoItem):
+    """CSP-type repository item."""
+
+    @property
+    def relpath(self):
+        return '/' + self.item_name
+    
+    @property
+    def is_text(self):
+        name = self.item_name
+        ext = splitext(name)[1]
+        if not ext:
+            return False
+        ext = ext[1:]
+        return ext.lower() in "csp,csr,xml,js,css,xsl,xsd,txt,html".split(',')
+
+    @property
+    def data(self):
+        if self.is_text:
+            mode, encoding = 'rt', self.encoding
+        else:
+            mode, encoding = 'rb', None
+        with open(join(self.base_dir, self.item_name), mode, encoding=encoding) as f:
+            data = f.read()
+        
+        if self.is_text:
+            data = data.replace('\r', '')
+
         return data
 
 
