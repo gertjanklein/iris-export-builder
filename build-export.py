@@ -229,11 +229,15 @@ def extract_export_content(export):
     # end tag are always on a line of their own, so we can use simple
     # string processing to get the content.
 
+    line:str
     result = []
     for line in export.splitlines(True):
         if line.startswith('<?xml'): continue
         if line.startswith('<Export'): continue
-        if line.startswith('</Export'): continue
+        # Data exports don't have their </Export> on a separate line
+        idx = line.find('</Export>')
+        if idx > -1:
+            line = line[:idx]
         result.append(line)
     content = ''.join(result)
 
