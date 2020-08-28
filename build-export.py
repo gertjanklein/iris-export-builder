@@ -11,6 +11,8 @@ import http.cookiejar
 import json
 import base64
 
+from lxml import etree
+
 from config import get_config, ConfigurationError
 from deployment import append_export_notes
 
@@ -33,27 +35,45 @@ def main(cfgfile):
     # Get object representing repo
     repo = get_repo(config)
 
-    # Determine export filename
-    export_name = get_export_name(config, repo.name)
+    # Create root element for export
+    root = etree.Element('Export')
+    root.attrib['generator'] = 'IRIS'
+    root.attrib['version'] = '26'
+    root.text = '\n'
+    root.tail = '\n'
 
-    # Create an export file containing all the items
-    with open(export_name, 'w', encoding='UTF-8') as outfile:
-        count = create_export(config, repo, outfile)
+    # Create the export by adding nodes for each item
+    create_export(config, repo, root)
+
+    # Determine export filename and write the output
+    export_name = get_export_name(config, repo.name)
+    et = etree.ElementTree(root)
+    et.write(export_name, xml_declaration=True, encoding="UTF-8")
+
+    # Calculate total count of items handled
+    itemcount = len(repo.src_items) + len(repo.data_items) + len(repo.csp_items)
+
+    # If CSP items are to be exported to a separate file, do so
+    if repo.csp_items and config.CSP.export == 'separate':
+        csp_export_name = export_csp_separate(config, repo, export_name)
+        count1 = len(repo.src_items) + len(repo.data_items)
+        count2 = len(repo.csp_items)
+        logmsg = f"\nDone; added {count1} items to export in {export_name} and {count2} to {csp_export_name}.\n"
+    else:
+        logmsg = f"\nDone; added {itemcount} items to export in {export_name}.\n"
     
     # Give some feedback
-    logging.info(f"\nDone; added {count} items to export in {export_name}.\n")
-    msgbox(f"Exported {count} items to {export_name}.")
-
+    logging.info(logmsg)
+    msgbox(f"Successfully exported {itemcount} items.")
     
 
-def create_export(config, repo, outfile):
+def create_export(config, repo, root:etree.Element):
     """Create the export from the items in the repo object."""
-    is_open = False
+    
     is_udl = config.Source.srctype == 'udl'
+    parser = etree.XMLParser(strip_cdata=False)
 
-    count = 0
-
-    # Write IRIS items to export file. Write the opening Export tag as well.
+    # Add IRIS source items.
     for item in repo.src_items:
         if is_udl:
             logging.info(f'Converting {item.name}')
@@ -61,46 +81,25 @@ def create_export(config, repo, outfile):
         else:
             logging.info(f'Adding {item.name}')
             export = item.data
-        
-        if not is_open:
-            # outfile.write('<?xml version="1.0" encoding="UTF-8"?>\n')
-            outfile.write(extract_export_header(export) + '\n')
-            is_open = True
-        outfile.write(extract_export_content(export) + '\n')
-        count += 1
-    
+        export_root = etree.fromstring(export.encode('UTF-8'), parser=parser)
+        for el in export_root:
+            el.tail = '\n\n'
+            root.append(el)
+
+    # Add data items
     for item in repo.data_items:
         logging.info(f'Adding {item.name}')
-        export = item.data
-        
-        if not is_open:
-            # outfile.write('<?xml version="1.0" encoding="UTF-8"?>\n')
-            outfile.write(extract_export_header(export) + '\n')
-            is_open = True
-        outfile.write(extract_export_content(export) + '\n')
-        count += 1
+        export_root = etree.fromstring(item.data.encode('UTF-8'), parser=parser)
+        for el in export_root:
+            el.tail = '\n\n'
+            root.append(el)
     
-    if repo.csp_items:
-        if config.CSP.export == 'embed':
-            # If this is just CSP files, we must write the Export tag ourselves
-            if not is_open:
-                outfile.write('<?xml version="1.0" encoding="UTF-8"?>\n')
-                outfile.write('<Export generator="IRIS" version="26">\n')
-
-            # Append the items to the export
-            count += append_csp_items(config, repo, outfile)
-        else:
-            # Create a separate CSP export file
-            count += export_csp_separate(config, repo, outfile.name)
+    if config.CSP.export == 'embed':
+        append_csp_items(config, repo, root)
 
     # Append export notes to make export usable as a deployment 
     if config.Local.deployment:
-        append_export_notes(config, repo, outfile)
-
-    # Close Export element
-    outfile.write('</Export>\n')
-
-    return count
+        append_export_notes(config, repo, root)
 
 
 def convert_to_xml(config, item):
@@ -130,20 +129,28 @@ def convert_to_xml(config, item):
 def export_csp_separate(config, repo, export_name):
     """ Creates a separate output file with CSP items. """
 
+    # Determine export name
     base, ext = splitext(export_name)
-    export_name = base+'_csp'+ext
+    export_name = f"{base}_csp{ext}"
 
-    with open(export_name, 'w', encoding='UTF-8') as outfile:
-        outfile.write('<?xml version="1.0" encoding="UTF-8"?>\n')
-        # Version can be relatively old, nothing changed since then
-        outfile.write('<Export generator="Cache" version="25">\n')
-        count = append_csp_items(config, repo, outfile)
-        outfile.write('\n</Export>\n')
-    return count
+    # Create root export element
+    root = etree.Element('Export')
+    root.attrib['generator'] = 'IRIS'
+    root.attrib['version'] = '25'
+    root.text = '\n'
+    root.tail = '\n'
+
+    # Add the CSP items to it
+    append_csp_items(config, repo, root)
+
+    # Write to output file
+    et = etree.ElementTree(root)
+    et.write(export_name, xml_declaration=True, encoding="UTF-8")
+
+    return export_name
 
 
-def append_csp_items(config, repo, outfile):
-    count = 0
+def append_csp_items(config, repo, root:etree.Element):
     for item in repo.csp_items:
         name = item.relpath
         split = split_csp(config, name)
@@ -151,17 +158,21 @@ def append_csp_items(config, repo, outfile):
             continue
         app, cspname = split
         logging.info(f'Adding {name} as app "{app}", item "{cspname}".')
-        count += 1
 
-        # Get CSP item data
-        data = item.data
-        
         if item.is_text:
-            append_csp_text(app, cspname, data, outfile)
+            name = 'CSP'
+            data = etree.CDATA(item.data)
         else:
-            append_csp_binary(app, cspname, data, outfile)
+            name = 'CSPBase64'
+            data = b'\n'+ base64.encodebytes(item.data)
+        
+        export = etree.Element(name)
+        export.attrib['name'] = cspname
+        export.attrib['application'] = app
+        export.text = data
+        export.tail = '\n\n'
 
-    return count
+        root.append(export)
 
 
 def split_csp(config, name:str):
@@ -197,51 +208,6 @@ def split_csp(config, name:str):
         return app, page
     
     return None
-
-
-def append_csp_text(app, name, data, outfile):
-    data = data.replace('\r', '')
-    outfile.write(f'<CSP name="{name}" application="{app}"><![CDATA[')
-    outfile.write(data)
-    outfile.write(']]></CSP>\n\n')
-
-
-def append_csp_binary(app, name, data, outfile):
-    outfile.write(f'<CSPBase64 name="{name}" application="{app}"><![CDATA[\n')
-    outfile.write(base64.encodebytes(data).decode())
-    outfile.write(']]></CSPBase64>\n\n')
-
-
-def extract_export_header(export):
-    """Extract XML declaration and <Export> element"""
-    result = []
-    for line in export.splitlines(True):
-        result.append(line)
-        if line.startswith('<Export'): break
-    
-    return ''.join(result)
-        
-    
-def extract_export_content(export):
-    """Extract contents of <Export> element"""
-    
-    # We use the knowledge that the XML declaration and Export start and
-    # end tag are always on a line of their own, so we can use simple
-    # string processing to get the content.
-
-    line:str
-    result = []
-    for line in export.splitlines(True):
-        if line.startswith('<?xml'): continue
-        if line.startswith('<Export'): continue
-        # Data exports don't have their </Export> on a separate line
-        idx = line.find('</Export>')
-        if idx > -1:
-            line = line[:idx]
-        result.append(line)
-    content = ''.join(result)
-
-    return content
 
 
 def get_export_name(config, repo_name):

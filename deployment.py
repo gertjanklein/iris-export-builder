@@ -2,6 +2,9 @@
 import datetime
 import platform
 
+from lxml import etree
+
+
 # Template for project embedded in deployment
 PROJECT_TPL = """
 <Project name="{name}" LastModified="{local_ts}">
@@ -38,7 +41,7 @@ DPL_NOTES_TPL = """
 """
 
 
-def append_export_notes(config, repo, outfile):
+def append_export_notes(config, repo, root:etree.Element):
     now = datetime.datetime.utcnow()
     
     # Local time, space separator between date and time
@@ -76,15 +79,18 @@ def append_export_notes(config, repo, outfile):
     # Add the name of the deployment to the project
     projectitems.append(f'<ProjectItem name="EnsExportNotes.{docname}.PTD" type="PTD"></ProjectItem>')
 
-    # Create and write project to deployment
+    # Create and add project to deployment
     projectitems = '\n'.join(projectitems)
     data = PROJECT_TPL.format(name=docname, local_ts=local_ts, utc_ts=utc_ts, source=source, items=projectitems)
-    outfile.write(data + '\n\n')
+    el = etree.fromstring(data)
+    el.tail = '\n\n'
+    root.append(el)
     
-    # Create and write deployment notes to deployment
+    # Create and add deployment notes to deployment
     items = '\n'.join(items)
     data = DPL_NOTES_TPL.format(docname=docname, machine=machine, utc=utc_ts, notes=notes, items=items)
-    outfile.write(data + '\n\n')
-
-
+    parser = etree.XMLParser(strip_cdata=False)
+    el = etree.fromstring(data, parser=parser)
+    el.tail = '\n\n'
+    root.append(el)
 
