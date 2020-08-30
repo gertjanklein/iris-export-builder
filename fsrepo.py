@@ -1,6 +1,7 @@
 
 import sys, os
-from os.path import join, split, relpath, exists, isfile, splitext
+from os.path import join, split, relpath, exists, isfile, splitext, getmtime
+from datetime import datetime, timezone
 import logging
 
 from config import get_config
@@ -96,7 +97,22 @@ class FsRepoItem:
     @property
     def filename(self):
         return join(self.base_dir, self.item_name)
-       
+        
+    @property
+    def horolog(self):
+        # Get file timestamp: UTC since 1970-01-01
+        ts = getmtime(self.filename)
+        # Make TZ aware
+        dt = datetime.fromtimestamp(ts).replace(tzinfo=timezone.utc)
+        # Get timestamp in local time, and convert to horolog offset
+        ts  = dt.timestamp() / 86400 + 47117
+        # Split date and time
+        d, t = divmod(ts, 1)
+        # Date as integer, time as seconds since midnight
+        d, t = int(d), round(t*86400, 3)
+        # Return horolog format
+        return f"{d},{t}"
+
     @property
     def data(self):
         encoding = self.encoding

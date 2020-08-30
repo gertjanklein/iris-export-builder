@@ -82,6 +82,12 @@ def create_export(config, repo, root:etree.Element):
             logging.info(f'Adding {item.name}')
             export = item.data
         export_root = etree.fromstring(export.encode('UTF-8'), parser=parser)
+        if config.Source.type == 'directory':
+            # Use local filesystem last update timestamp
+            update_timestamp(export_root, item)
+        else:
+            # GitHub zip download timestamps are wrong; remove them
+            remove_timestamps(export_root)
         for el in export_root:
             el.tail = '\n\n'
             root.append(el)
@@ -94,12 +100,36 @@ def create_export(config, repo, root:etree.Element):
             el.tail = '\n\n'
             root.append(el)
     
-    if config.CSP.export == 'embed':
+    if config.Source.cspdir and config.CSP.export == 'embed':
         append_csp_items(config, repo, root)
 
     # Append export notes to make export usable as a deployment 
     if config.Local.deployment:
         append_export_notes(config, repo, root)
+
+
+def export_csp_separate(config, repo, export_name):
+    """ Creates a separate output file with CSP items. """
+
+    # Determine export name
+    base, ext = splitext(export_name)
+    export_name = f"{base}_csp{ext}"
+
+    # Create root export element
+    root = etree.Element('Export')
+    root.attrib['generator'] = 'IRIS'
+    root.attrib['version'] = '25'
+    root.text = '\n'
+    root.tail = '\n'
+
+    # Add the CSP items to it
+    append_csp_items(config, repo, root)
+
+    # Write to output file
+    et = etree.ElementTree(root)
+    et.write(export_name, xml_declaration=True, encoding="UTF-8")
+
+    return export_name
 
 
 def convert_to_xml(config, item):
@@ -126,28 +156,25 @@ def convert_to_xml(config, item):
     return content
 
 
-def export_csp_separate(config, repo, export_name):
-    """ Creates a separate output file with CSP items. """
+def remove_timestamps(export:etree.Element):
+    """Remove timestamp elements for classes in export."""
 
-    # Determine export name
-    base, ext = splitext(export_name)
-    export_name = f"{base}_csp{ext}"
+    tree = etree.ElementTree(export)
+    for el in tree.xpath("/Export/Class/TimeChanged"):
+        el.getparent().remove(el)
+    for el in tree.xpath("/Export/Class/TimeCreated"):
+        el.getparent().remove(el)
 
-    # Create root export element
-    root = etree.Element('Export')
-    root.attrib['generator'] = 'IRIS'
-    root.attrib['version'] = '25'
-    root.text = '\n'
-    root.tail = '\n'
 
-    # Add the CSP items to it
-    append_csp_items(config, repo, root)
+def update_timestamp(export:etree.Element, item):
+    """Set timestamps for classes in export from item modified time."""
 
-    # Write to output file
-    et = etree.ElementTree(root)
-    et.write(export_name, xml_declaration=True, encoding="UTF-8")
-
-    return export_name
+    ts = item.horolog
+    for el in export:
+        if el.tag != "Class": continue
+        for subel in el:
+            if subel.tag == "TimeChanged" or subel.tag == "TimeCreated":
+                subel.text = ts
 
 
 def append_csp_items(config, repo, root:etree.Element):
