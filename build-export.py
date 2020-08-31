@@ -43,7 +43,7 @@ def main(cfgfile):
     root.tail = '\n'
 
     # Create the export by adding nodes for each item
-    create_export(config, repo, root)
+    skipped = create_export(config, repo, root)
 
     # Determine export filename and write the output
     export_name = get_export_name(config, repo.name)
@@ -51,13 +51,14 @@ def main(cfgfile):
     et.write(export_name, xml_declaration=True, encoding="UTF-8")
 
     # Calculate total count of items handled
-    itemcount = len(repo.src_items) + len(repo.data_items) + len(repo.csp_items)
+    itemcount = len(repo.src_items) + len(repo.data_items) + len(repo.csp_items) - skipped
 
     # If CSP items are to be exported to a separate file, do so
     if repo.csp_items and config.CSP.export == 'separate':
-        csp_export_name = export_csp_separate(config, repo, export_name)
+        csp_export_name, skipped = export_csp_separate(config, repo, export_name)
+        itemcount -= skipped
         count1 = len(repo.src_items) + len(repo.data_items)
-        count2 = len(repo.csp_items)
+        count2 = len(repo.csp_items) - skipped
         logmsg = f"\nDone; added {count1} items to export in {export_name} and {count2} to {csp_export_name}.\n"
     else:
         logmsg = f"\nDone; added {itemcount} items to export in {export_name}.\n"
@@ -70,6 +71,7 @@ def main(cfgfile):
 def create_export(config, repo, root:etree.Element):
     """Create the export from the items in the repo object."""
     
+    skipped = 0
     is_udl = config.Source.srctype == 'udl'
     parser = etree.XMLParser(strip_cdata=False)
 
@@ -101,11 +103,13 @@ def create_export(config, repo, root:etree.Element):
             root.append(el)
     
     if config.Source.cspdir and config.CSP.export == 'embed':
-        append_csp_items(config, repo, root)
+        skipped = append_csp_items(config, repo, root)
 
     # Append export notes to make export usable as a deployment 
     if config.Local.deployment:
         append_export_notes(config, repo, root)
+    
+    return skipped
 
 
 def export_csp_separate(config, repo, export_name):
@@ -123,13 +127,13 @@ def export_csp_separate(config, repo, export_name):
     root.tail = '\n'
 
     # Add the CSP items to it
-    append_csp_items(config, repo, root)
+    skipped = append_csp_items(config, repo, root)
 
     # Write to output file
     et = etree.ElementTree(root)
     et.write(export_name, xml_declaration=True, encoding="UTF-8")
 
-    return export_name
+    return export_name, skipped
 
 
 def convert_to_xml(config, item):
@@ -178,10 +182,12 @@ def update_timestamp(export:etree.Element, item):
 
 
 def append_csp_items(config, repo, root:etree.Element):
+    skipped = 0
     for item in repo.csp_items:
         name = item.relpath
         split = split_csp(config, name)
         if not split:
+            skipped += 1
             continue
         app, cspname = split
         logging.info(f'Adding {name} as app "{app}", item "{cspname}".')
@@ -200,6 +206,8 @@ def append_csp_items(config, repo, root:etree.Element):
         export.tail = '\n\n'
 
         root.append(export)
+
+    return skipped
 
 
 def split_csp(config, name:str):
