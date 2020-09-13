@@ -33,7 +33,8 @@ class Namespace(SimpleNamespace):
     
     def __delattr__(self, name):
         """Add support for deleting values."""
-        self.__dict__.__delattr__(name)
+        d = object.__getattribute__(self, '__dict__')
+        del d[name]
 
     def _get(self, key, default=None):
         """Retrieve a value, or default if not found."""
