@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 # encoding: UTF-8
 
-import sys, os
-from os.path import dirname, join, isabs, abspath, exists, splitext, isfile, basename
+import os
+from os.path import dirname, join, isabs, exists, splitext, basename
 import re
 import logging
 import urllib.request as urq
@@ -13,20 +13,13 @@ import base64
 
 from lxml import etree
 
-from config import get_config, ConfigurationError
+from config import get_config, ConfigurationError, msgbox
 from deployment import append_export_notes
 
 
-def main(cfgfile):
-    # Initial logging setup: file next to ini file. Errors parsing the
-    # config file will be logged here.
-    setup_basic_logging(cfgfile)
-    
-    # Log unhandled exceptions
-    sys.excepthook = unhandled_exception
-
-    # Get configuration and do final logging setup
-    config = get_config(cfgfile, setup_logging)
+def main():
+    # Get configuration and handle command line arguments
+    config = get_config()
     
     # Setup basic auth handler for IRIS, if we need to convert UDL to XML
     if config.Source.srctype == 'udl':
@@ -182,6 +175,8 @@ def update_timestamp(export:etree.Element, item):
 
 
 def append_csp_items(config, repo, root:etree.Element):
+    """Append CSP items to the export."""
+    
     skipped = 0
     for item in repo.csp_items:
         name = item.relpath
@@ -292,90 +287,6 @@ def setup_urllib(config):
     urq.install_opener(opener)
 
 
-def setup_basic_logging(cfgfile):
-    """ Initial logging setup: log to file next to config file """
-
-    # Determine log file name
-    base, ext = splitext(cfgfile)
-    if ext.lower() == '.toml':
-        logfile = f'{base}.log'
-    else:
-        logfile = f'{cfgfile}.log'
-    
-    # Create handler with delayed creation of log file
-    handlers = [logging.FileHandler(logfile, delay=True)]
-
-    # Display what we log as-is, no level strings etc.
-    logging.basicConfig(handlers=handlers, level=logging.INFO,
-        format='%(message)s')
-
-
-def setup_logging(config):
-    """ Final logging setup: allow log location override in config """
-
-    logdir:str = config.Local.logdir
-    loglevel:str = config.Local.loglevel
-
-    # Determine filename (without path)
-    base, ext = splitext(basename(config.cfgfile))
-    if ext.lower() == '.toml':
-        logfile = f'{base}.log'
-    else:
-        logfile = f'{base}.{ext}.log'
-
-    # Determine filename (with path)
-    name = join(logdir, logfile)
-    if not isabs(logdir):
-        # Logdir not absolute: make it relative to dir config file is in
-        name = join(dirname(config.cfgfile), name)
-
-    # Make sure the log directory exists
-    logdir = dirname(name)
-    os.makedirs(logdir, exist_ok=True)
-
-    # Replace the current logging handler with one using the newly
-    # determined path
-    logger = logging.getLogger()
-    logger.handlers.clear()
-    logger.handlers.append(logging.FileHandler(name, 'a'))
-
-    if loglevel is not None:
-        logger.setLevel(loglevel.upper())
-
-    # Log appends; create visible separation for this run
-    logging.info(f"\n\n===== Starting at {str(datetime.datetime.now()).split('.')[0]}")
-    
-
-def unhandled_exception(exc_type, exc_value, exc_traceback):
-    """ Handle otherwise unhandled exceptions by logging them """
-
-    if exc_type == ConfigurationError:
-        msg = exc_value.args[0]
-        logging.error("\n%s", msg)
-    else:
-        msg = f"An error occurred; please see the log file for details.\n\n{exc_value}"
-        logging.exception("\n##### Unhandled exception:", exc_info=(exc_type, exc_value, exc_traceback))
-    msgbox(msg, True)
-    sys.exit(1)
-
-
-def msgbox(msg, is_error=False):
-    """ Display, if on Windows, a message box """
-
-    if os.name == 'nt':
-        if is_error:
-            flags = 0x30
-            title = "Error"
-        else:
-            flags = 0
-            title = "Info"
-        import ctypes
-        MessageBox = ctypes.windll.user32.MessageBoxW
-        MessageBox(None, msg, title, flags)
-    else:
-        print(msg)
-
-
 def get_repo(config):
     if config.Source.type == 'github':
         from github import get_data
@@ -387,22 +298,7 @@ def get_repo(config):
 
 
 if __name__ == '__main__':
-    if len(sys.argv) < 2:
-        msgbox(f"Usage: {sys.argv[0]} <cfgfile>", True)
-        sys.exit(1)
-
-    cfgfile = sys.argv[1]
-    if not isabs(cfgfile) and not exists(cfgfile):
-        cfgfile = join(dirname(__file__), cfgfile)
-    
-    if not exists(cfgfile) or not isfile(cfgfile):
-        msgbox(f"File {cfgfile} not found.\nUsage: {sys.argv[0]} <cfgfile>", True)
-        sys.exit(1)
-    
-    if not isabs(cfgfile):
-        cfgfile = abspath(cfgfile)
-    
-    main(cfgfile)
+    main()
     
     
 
