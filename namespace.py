@@ -77,6 +77,23 @@ def ns2dict(input:Namespace) -> dict:
     return d
 
 
+def set_in_path(ns:Namespace, path:str, value):
+    """Sets a value in a sub-namespace, assuring it exists."""
+
+    assert '.' in path
+    parts = path.split('.')
+    # Add sub-namespaces, if not present
+    for name in parts[:-1]:
+        if not name in ns:
+            ns[name] = Namespace()
+            ns[name]['_name'] = name
+        elif not isinstance(ns[name], Namespace):
+            raise ConfigurationError(f"Configuration error: {name} in configuration should be a section")
+        ns = ns[name]
+    # Set value
+    value_name = parts[-1]
+    ns[value_name] = value
+
 # =====
 
 class ConfigurationError(ValueError):
