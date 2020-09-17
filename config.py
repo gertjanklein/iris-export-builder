@@ -4,6 +4,8 @@ import os
 from os.path import exists, isfile, isabs, dirname, abspath, join, splitext, basename
 import re
 import datetime
+import argparse
+from io import StringIO
 import logging
 
 import toml
@@ -16,7 +18,8 @@ def get_config() -> ns.Namespace:
     """Parse the config file, check validity, return as Namespace."""
     
     # Get configuration filename from commandline
-    cfgfile = parse_args()
+    args = parse_args()
+    cfgfile = args.config
 
     # Initial logging setup: file next to config file. Errors parsing the
     # config file will be logged here.
@@ -41,6 +44,9 @@ def get_config() -> ns.Namespace:
     # Do final setup of logging
     setup_logging(config)
 
+    # Merge command line overrides into configuration
+    merge_overrides(args, config)
+
     # Make sure configuration is complete
     check(config)
     
@@ -58,6 +64,14 @@ def get_config() -> ns.Namespace:
 
 
 # =====
+
+def merge_overrides(args:argparse.Namespace, config:ns.Namespace):
+    """Merge command line overrides into configuration"""
+    
+    config.nogui = args.nogui
+    if args.github_tag:
+        ns.set_in_path(config, 'GitHub.tag', args.github_tag)
+
 
 def check(config:ns.Namespace):
     """Check validity of values in the parsed configuration."""
@@ -224,23 +238,52 @@ def msgbox(msg, is_error=False):
 # =====
 
 def parse_args():
-    """Parse command line arguments; return configuration file."""
+    """Parse command line arguments."""
 
-    if len(sys.argv) < 2:
-        msgbox(f"Usage: {sys.argv[0]} <cfgfile>", True)
-        sys.exit(1)
+    parser = argparse.ArgumentParser()
+    parser.add_argument("config",
+       help="The (TOML) configuration file to use")
+    parser.add_argument("--github-tag", default='',
+       help="Override tag/branch to retrieve on GitHub")
+    parser.add_argument("--nogui", action='store_true',
+       help="Do not display a message box on completion.")
 
-    cfgfile = sys.argv[1]
+    # replace stdout/stderr to capture argparse output
+    sys.stdout = StringIO()
+    sys.stderr = StringIO()
+    
+    # Check command line
+    try:
+        args = parser.parse_args()
+
+    except SystemExit:
+        # Get argparse output; either an error message in stderr, or
+        # a usage message in stdout.
+        msg, err = sys.stderr.getvalue(), True
+        if not msg:
+            msg = sys.stdout.getvalue()
+            err = False
+        
+        # Show error or usage and exit
+        msgbox(msg, err)
+        raise
+
+    finally:
+        # Restore stdout/stderr
+        sys.stdout = sys.__stdout__
+        sys.stderr = sys.__stderr__
+    
+    cfgfile = args.config
     if not isabs(cfgfile) and not exists(cfgfile):
         cfgfile = join(dirname(__file__), cfgfile)
     
     if not exists(cfgfile) or not isfile(cfgfile):
-        msgbox(f"File {cfgfile} not found.\nUsage: {sys.argv[0]} <cfgfile>", True)
+        msgbox(f"Error: file {cfgfile} not found.\n\n{parser.format_help()}", True)
         sys.exit(1)
     
     if not isabs(cfgfile):
         cfgfile = abspath(cfgfile)
     
-    return cfgfile
+    args.config = cfgfile
 
-
+    return args

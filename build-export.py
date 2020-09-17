@@ -58,7 +58,8 @@ def main():
     
     # Give some feedback
     logging.info(logmsg)
-    msgbox(f"Successfully exported {itemcount} items.")
+    if not config.no_gui:
+        msgbox(f"Successfully exported {itemcount} items.")
     
 
 def create_export(config, repo, root:etree.Element):
