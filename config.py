@@ -68,7 +68,7 @@ def get_config() -> ns.Namespace:
 def merge_overrides(args:argparse.Namespace, config:ns.Namespace):
     """Merge command line overrides into configuration"""
     
-    config.nogui = args.nogui
+    config.no_gui = args.no_gui
     if args.github_tag:
         ns.set_in_path(config, 'GitHub.tag', args.github_tag)
 
@@ -245,7 +245,7 @@ def parse_args():
        help="The (TOML) configuration file to use")
     parser.add_argument("--github-tag", default='',
        help="Override tag/branch to retrieve on GitHub")
-    parser.add_argument("--nogui", action='store_true',
+    parser.add_argument("--no-gui", action='store_true',
        help="Do not display a message box on completion.")
 
     # replace stdout/stderr to capture argparse output
