@@ -69,9 +69,9 @@ def merge_overrides(args:argparse.Namespace, config:ns.Namespace):
     """Merge command line overrides into configuration"""
     
     config.no_gui = args.no_gui
-    if args.github_tag:
-        ns.set_in_path(config, 'GitHub.tag', args.github_tag)
-
+    for arg in ARGS:
+        ns.set_in_path(config, arg['path'], getattr(args, arg['name']))
+        
 
 def check(config:ns.Namespace):
     """Check validity of values in the parsed configuration."""
@@ -237,18 +237,35 @@ def msgbox(msg, is_error=False):
 
 # =====
 
+# Command line overrides for values in the configuration file
+ARGS = [
+    {
+        'name': 'github_tag',
+        'path': 'GitHub.tag',
+        'argparse': {
+            'names': ["--github-tag"],
+            'default': '',
+            'help': "Override tag/branch to retrieve on GitHub"
+        }
+    }
+]
+
 def parse_args():
     """Parse command line arguments."""
 
     parser = argparse.ArgumentParser()
     parser.add_argument("config",
        help="The (TOML) configuration file to use")
-    parser.add_argument("--github-tag", default='',
-       help="Override tag/branch to retrieve on GitHub")
     parser.add_argument("--no-gui", action='store_true',
        help="Do not display a message box on completion.")
+    
+    # Add command line overrides
+    for arg in ARGS:
+        kwargs = arg['argparse']
+        names = kwargs.pop('names')
+        parser.add_argument(*names, **kwargs)
 
-    # replace stdout/stderr to capture argparse output
+    # Replace stdout/stderr to capture argparse output
     sys.stdout = StringIO()
     sys.stderr = StringIO()
     
