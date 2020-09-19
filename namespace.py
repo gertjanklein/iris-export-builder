@@ -77,7 +77,9 @@ def ns2dict(input:Namespace) -> dict:
     return d
 
 
-def set_in_path(ns:Namespace, path, value):
+# =====
+
+def set_in_path(ns:Namespace, path:str, value):
     """Sets a value in a sub-namespace, assuring it exists."""
 
     assert '.' in path
@@ -94,8 +96,8 @@ def set_in_path(ns:Namespace, path, value):
     value_name = parts[-1]
     ns[value_name] = value
 
-def get_in_path(ns:Namespace, path, default=None):
-    """Gets a value in a sub-namespace."""
+def get_in_path(ns:Namespace, path:str, default=None):
+    """Gets a value in a sub-namespace, if present. Never raises."""
 
     assert '.' in path
     parts = path.split('.')
@@ -104,6 +106,8 @@ def get_in_path(ns:Namespace, path, default=None):
         if not name in ns:
             return default
         ns = ns[name]
+        if not isinstance(ns, Namespace):
+            return None
     value_name = parts[-1]
     return ns._get(value_name, default)
 
