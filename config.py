@@ -8,6 +8,8 @@ import argparse
 from io import StringIO
 import logging
 
+from typing import cast
+
 import toml
 
 import namespace as ns
@@ -70,7 +72,8 @@ def merge_overrides(args:argparse.Namespace, config:ns.Namespace):
     
     config.no_gui = args.no_gui
     for arg in ARGS:
-        ns.set_in_path(config, arg['path'], getattr(args, arg['name']))
+        name = cast(str, arg['name'])
+        ns.set_in_path(config, arg['path'], getattr(args, name))
         
 
 def check(config:ns.Namespace):
