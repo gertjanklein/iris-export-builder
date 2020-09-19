@@ -72,8 +72,10 @@ def merge_overrides(args:argparse.Namespace, config:ns.Namespace):
     
     config.no_gui = args.no_gui
     for arg in ARGS:
-        name = cast(str, arg['name'])
-        ns.set_in_path(config, arg['path'], getattr(args, name))
+        value = getattr(args, cast(str, arg['name']))
+        if not value:
+            continue
+        ns.set_in_path(config, arg['path'], value)
         
 
 def check(config:ns.Namespace):
@@ -144,11 +146,15 @@ def check(config:ns.Namespace):
 
     if src.srctype == 'udl':
         # Server needed for conversion to XML
-        ns.check_section(config, 'Server')
-        svr = config.Server
-        for name in 'host,port,namespace,user,password'.split(','):
-            ns.check_notempty(svr, name)
-        ns.check_default(config.Server, 'https', False)
+        svr = ns.get_section(config, 'Server')
+        if svr is None:
+            svr = config.Server = ns.Namespace()
+        ns.check_default(svr, 'host', 'localhost')
+        ns.check_default(svr, 'port', '52773')
+        ns.check_default(svr, 'user', 'SuperUser')
+        ns.check_default(svr, 'password', 'SYS')
+        ns.check_default(svr, 'namespace', 'USER')
+        ns.check_default(svr, 'https', False)
         
 
 # ==========

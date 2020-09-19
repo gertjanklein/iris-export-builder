@@ -1,14 +1,11 @@
 
 """Retrieve and parse a release from GitHub."""
 
-import sys
-from os.path import exists, isfile, splitext
+from os.path import splitext
 import urllib.request as urq
 import logging
 import io
 from zipfile import ZipFile, ZipInfo
-
-from config import get_config
 
 
 def get_data(config):
@@ -157,24 +154,3 @@ def get_zip(url, token):
         data = io.BytesIO(rsp.read())
     return ZipFile(data)
 
-
-
-def main(cfgfile):
-    cfg = get_config(cfgfile)
-    zr = get_data(cfg)
-
-    for item in zr.src_items:
-        zi = item.info
-        print(item.relpath, zi.filename)
-
-if __name__ == "__main__":
-    if len(sys.argv) < 2:
-        print(f"Usage: {sys.argv[0]} <configfile>")
-        sys.exit(1)
-
-    cfgfile = sys.argv[1]
-    if not exists(cfgfile) or not isfile(cfgfile):
-        print(f"File {cfgfile} not found.\nUsage: {sys.argv[0]} <configfile>")
-        sys.exit(1)
-    
-    main(cfgfile)

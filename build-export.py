@@ -20,7 +20,10 @@ from deployment import append_export_notes
 def main():
     # Get configuration and handle command line arguments
     config = get_config()
-    
+    run(config)
+
+
+def run(config):
     # Setup basic auth handler for IRIS, if we need to convert UDL to XML
     if config.Source.srctype == 'udl':
         setup_urllib(config)
