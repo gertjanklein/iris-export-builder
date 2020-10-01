@@ -71,7 +71,7 @@ def test_build_deployment(tmpdir, iris):
     assert len(tree.findall('/Project')) == 1, "No project in export"
     assert len(tree.findall('/Project/Items/ProjectItem')) == 24, "Unexpected number of items in export"
     ptd_name = tree.find('/Project/Items/ProjectItem[24]').get('name')
-    assert tree.find(f'/Document[@name="{ptd_name}"]') is not None, "Deployment document no in export"
+    assert tree.find(f'/Document[@name="{ptd_name}"]') is not None, "Deployment document not in export"
     ptd = tree.find(f'/Document[@name="{ptd_name}"]/ProjectTextDocument')
     assert ptd is not None, "Embedded project text document not in deployment"
     subtree = etree.parse(StringIO(ptd.text))
