@@ -1,0 +1,9 @@
+version: '2'
+services:
+  iris:
+    build:
+      dockerfile: Dockerfile
+      context: .
+    ports:
+      - "9092:52773"
+    command: --password-file /tmp/password.txt

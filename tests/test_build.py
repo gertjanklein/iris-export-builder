@@ -1,10 +1,30 @@
 from unittest.mock import patch
-import importlib
+from importlib import import_module, reload
 import binascii
 import logging
+from os.path import dirname, join, exists
+from io import BytesIO, StringIO
+
+import pytest
+import docker
+
+import requests
+from requests.exceptions import ConnectionError
+from requests.auth import HTTPBasicAuth
+
+from lxml import etree
 
 import config
-builder = importlib.import_module("build-export")
+builder = import_module("build-export")
+
+
+# Check whether docker(-compose) is available
+try:
+    client = docker.from_env()
+    NODOCKER = False
+    del client
+except docker.errors.DockerException:
+    NODOCKER = True
 
 
 CFG = """
@@ -17,15 +37,73 @@ skip = [ "*Strix.SCM.*", "*Strix.Lib*", "*Strix.Test*", "*Strix.JSON*" ]
 user = "gertjanklein"
 repo = "Strix"
 tag = "840e7413371486b74920b2b4575e10cab390b44a"
+[Server]
+host = "{host}"
+port = "{port}"
 [Local]
 outfile = 'out.xml'
 """
 
 
-def test_build(tmpdir):
+@pytest.mark.skipif(NODOCKER, reason="Docker not available.")
+@pytest.mark.usefixtures("reload_modules")
+def test_build(tmpdir, iris):
+    host, port = iris
+    cfg = CFG.format(host=host, port=port)
+    export = get_build(cfg, tmpdir)
+    validate_schema(export, 'irisexport.xsd')
+    # Check binary equality
+    crc = binascii.crc32(export)
+    assert crc == 1384993019
+    
+
+@pytest.mark.skipif(NODOCKER, reason="Docker not available.")
+@pytest.mark.usefixtures("reload_modules")
+def test_build_deployment(tmpdir, iris):
+    host, port = iris
+    cfg = CFG.format(host=host, port=port) + "\ndeployment = true"
+    export = get_build(cfg, tmpdir)
+    tree = etree.parse(BytesIO(export))
+    # Can't CRC file, export notes contain timestamp. Check contents.
+    assert tree.docinfo.root_name == 'Export'
+    assert tree.find('/Class[@name="Strix.Background.ItemInfo"]') is not None
+    assert tree.find('/Routine[@name="Strix"]') is not None
+    assert len(tree.findall('/Project')) == 1
+    assert len(tree.findall('/Project/Items/ProjectItem')) == 24
+    ptd_name = tree.find('/Project/Items/ProjectItem[24]').get('name')
+    assert tree.find(f'/Document[@name="{ptd_name}"]') is not None
+    ptd = tree.find(f'/Document[@name="{ptd_name}"]/ProjectTextDocument')
+    assert ptd is not None
+    subtree = etree.parse(StringIO(ptd.text))
+    assert subtree.find('/Contents') is not None
+    assert len(subtree.findall('/Contents/Item')) == 23
+    assert subtree.find('/Contents/Item[23]').text == 'Strix.INC'
+    
+    validate_schema(export, 'irisexport.xsd')
+    
+
+def validate_schema(export, schema_filename):
+    """Validate the export against the schema file, if it exists."""
+    
+    schema_filename = join(dirname(__file__), schema_filename)
+    if not exists(schema_filename):
+        return
+    tree = etree.parse(BytesIO(export))
+    with open(schema_filename, encoding='UTF-8') as f:
+        schema = etree.XMLSchema(etree.parse(f))
+    valid = schema.validate(tree)
+    # pylint: disable=no-member
+    assert valid, schema.error_log.last_error
+
+
+# =====
+
+def get_build(toml:str, tmpdir):
+    """Retrieves a build using the toml config passed in."""
+    
     cfgfile = str(tmpdir.join('cfg.toml'))
     with open(cfgfile, 'wt') as f:
-        f.write(CFG)
+        f.write(toml)
     
     args = ['builder', cfgfile, '--no-gui']
     with patch('sys.argv', args):
@@ -35,11 +113,46 @@ def test_build(tmpdir):
     outfile = str(tmpdir.join('out.xml'))
     with open(outfile, 'rb') as f:
         export = f.read()
-    
-    crc = binascii.crc32(export)
-    assert crc == 1384993019
-    
+
     # Cleanup: log handler still has log file open
     logging.getLogger().handlers.clear()
-    tmpdir.join('..').remove(ignore_errors=True)
-        
+
+    return export
+
+
+@pytest.fixture(scope="function")
+def reload_modules():
+    """Reload modules to clear state for new test."""
+
+    # Reload after running the test
+    yield
+    reload(config)
+    reload(builder)
+    reload(logging)
+
+
+@pytest.fixture(scope="session")
+def iris(docker_ip, docker_services):
+    """Ensure the API is up and responsive."""
+
+    # `port_for` takes a container port and returns the corresponding host port
+    port = docker_services.port_for("iris", 52773)
+    url = "http://{}:{}/api/atelier/".format(docker_ip, port)
+
+    # Helper: checks whether IRIS API is available
+    auth = HTTPBasicAuth('_SYSTEM', 'SYS')
+    def is_responsive():
+        try:
+            response = requests.get(url, auth=auth)
+            if response.status_code == 200:
+                return True
+        except ConnectionError:
+            return False
+        return None
+
+    docker_services.wait_until_responsive(
+        timeout=40.0, pause=1, check=is_responsive)
+    
+    return docker_ip, port
+
+
