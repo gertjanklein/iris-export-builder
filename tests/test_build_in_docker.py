@@ -66,18 +66,18 @@ def test_build_deployment(tmpdir, iris):
     tree = etree.parse(BytesIO(export))
     # Can't CRC file, export notes contain timestamp. Check contents.
     assert tree.docinfo.root_name == 'Export'
-    assert tree.find('/Class[@name="Strix.Background.ItemInfo"]') is not None
-    assert tree.find('/Routine[@name="Strix"]') is not None
-    assert len(tree.findall('/Project')) == 1
-    assert len(tree.findall('/Project/Items/ProjectItem')) == 24
+    assert tree.find('/Class[@name="Strix.Background.ItemInfo"]') is not None, "Strix.Background.ItemInfo not in export"
+    assert tree.find('/Routine[@name="Strix"]') is not None, "Strix.inc not in export"
+    assert len(tree.findall('/Project')) == 1, "No project in export"
+    assert len(tree.findall('/Project/Items/ProjectItem')) == 24, "Unexpected number of items in export"
     ptd_name = tree.find('/Project/Items/ProjectItem[24]').get('name')
-    assert tree.find(f'/Document[@name="{ptd_name}"]') is not None
+    assert tree.find(f'/Document[@name="{ptd_name}"]') is not None, "Deployment document no in export"
     ptd = tree.find(f'/Document[@name="{ptd_name}"]/ProjectTextDocument')
-    assert ptd is not None
+    assert ptd is not None, "Embedded project text document not in deployment"
     subtree = etree.parse(StringIO(ptd.text))
-    assert subtree.find('/Contents') is not None
-    assert len(subtree.findall('/Contents/Item')) == 23
-    assert subtree.find('/Contents/Item[23]').text == 'Strix.INC'
+    assert subtree.find('/Contents') is not None, "No Contents element in deployment"
+    assert len(subtree.findall('/Contents/Item')) == 23, "Unexpected number of items in deployment"
+    assert subtree.find('/Contents/Item[23]').text == 'Strix.INC', "Unexpected order of items in deployment"
     
     validate_schema(export, 'irisexport.xsd')
     
@@ -93,7 +93,7 @@ def validate_schema(export, schema_filename):
         schema = etree.XMLSchema(etree.parse(f))
     valid = schema.validate(tree)
     # pylint: disable=no-member
-    assert valid, schema.error_log.last_error
+    assert valid, f"Export schema validation failed: {schema.error_log.last_error}"
 
 
 # =====
