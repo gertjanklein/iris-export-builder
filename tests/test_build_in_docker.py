@@ -27,6 +27,9 @@ except docker.errors.DockerException:
     NODOCKER = True
 
 
+# Configuration to retrieve a specific checkin of (part of) the Strix
+# package from GitHub, and create an export from it; this should
+# always yield the same result.
 CFG = """
 [Source]
 type = "github"
@@ -48,6 +51,7 @@ outfile = 'out.xml'
 @pytest.mark.skipif(NODOCKER, reason="Docker not available.")
 @pytest.mark.usefixtures("reload_modules")
 def test_build(tmpdir, iris):
+    """Retrieve and build specific packge."""
     host, port = iris
     cfg = CFG.format(host=host, port=port)
     export = get_build(cfg, tmpdir)
@@ -60,6 +64,7 @@ def test_build(tmpdir, iris):
 @pytest.mark.skipif(NODOCKER, reason="Docker not available.")
 @pytest.mark.usefixtures("reload_modules")
 def test_build_deployment(tmpdir, iris):
+    """Check creating deployment."""
     host, port = iris
     cfg = CFG.format(host=host, port=port) + "\ndeployment = true"
     export = get_build(cfg, tmpdir)
@@ -146,6 +151,7 @@ def iris(docker_ip, docker_services):
             response = requests.get(url, auth=auth)
             if response.status_code == 200:
                 return True
+            raise ValueError(f"Unexpected status code '{response.status_code}'.")
         except ConnectionError:
             return False
         return None
