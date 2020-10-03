@@ -1,9 +1,14 @@
 version: '2'
 services:
   iris:
-    build:
-      dockerfile: Dockerfile
-      context: .
+    image: "store/intersystems/iris-community:2020.3.0.221.0"
     ports:
       - "9092:52773"
-    command: --password-file /tmp/password.txt
+    secrets:
+      - password
+    command: --password-file /run/secrets/password
+
+secrets:
+  password:
+    file: ./pw
+
