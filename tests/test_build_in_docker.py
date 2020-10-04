@@ -58,7 +58,7 @@ def test_build(tmpdir, iris):
     validate_schema(export, 'irisexport.xsd')
     # Check binary equality
     crc = binascii.crc32(export)
-    assert crc == 1384993019
+    assert crc == 663428536
     
 
 @pytest.mark.skipif(NODOCKER, reason="Docker not available.")

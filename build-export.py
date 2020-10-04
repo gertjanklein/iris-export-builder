@@ -10,6 +10,7 @@ import datetime
 import http.cookiejar
 import json
 import base64
+from io import BytesIO
 
 from lxml import etree
 
@@ -44,7 +45,9 @@ def run(config):
     # Determine export filename and write the output
     export_name = get_export_name(config, repo.name)
     et = etree.ElementTree(root)
-    et.write(export_name, xml_declaration=True, encoding="UTF-8")
+    export = BytesIO()
+    et.write(export, xml_declaration=True, encoding="UTF-8")
+    save_export(export, export_name)
 
     # Calculate total count of items handled
     itemcount = len(repo.src_items) + len(repo.data_items) + len(repo.csp_items) - skipped
@@ -128,7 +131,9 @@ def export_csp_separate(config, repo, export_name):
 
     # Write to output file
     et = etree.ElementTree(root)
-    et.write(export_name, xml_declaration=True, encoding="UTF-8")
+    export = BytesIO()
+    et.write(export, xml_declaration=True, encoding="UTF-8")
+    save_export(export, export_name)
 
     return export_name, skipped
 
@@ -299,6 +304,15 @@ def get_repo(config):
     else:
         raise ConfigurationError(f"Invalid repository type '{config.Source.type}' in configuration.")
     return get_data(config)
+
+
+def save_export(export:BytesIO, filename:str):
+    """Saves the export to a file; ensures Windows line endings."""
+    export = export.getvalue()
+    export = export.replace(b'\r', b'')
+    export = export.replace(b'\n', b'\r\n')
+    with open(filename, mode='wb') as f:
+        f.write(export)
 
 
 if __name__ == '__main__':
