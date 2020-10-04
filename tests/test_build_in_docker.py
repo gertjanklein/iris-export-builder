@@ -4,6 +4,7 @@ import binascii
 import logging
 from os.path import dirname, join, exists
 from io import BytesIO, StringIO
+from typing import Any
 
 import pytest
 import docker
@@ -15,7 +16,7 @@ from requests.auth import HTTPBasicAuth
 from lxml import etree
 
 import config
-builder = import_module("build-export")
+builder = import_module("build-export") # type: Any
 
 
 # Check whether docker(-compose) is available
@@ -116,8 +117,8 @@ def get_build(toml:str, tmpdir):
     builder.run(cfg)
     
     outfile = str(tmpdir.join('out.xml'))
-    with open(outfile, 'rb') as f:
-        export = f.read()
+    with open(outfile, 'rb') as bf:
+        export = bf.read()
 
     # Cleanup: log handler still has log file open
     logging.getLogger().handlers.clear()

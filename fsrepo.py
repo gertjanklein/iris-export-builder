@@ -1,6 +1,6 @@
 
-import sys, os
-from os.path import join, split, relpath, exists, isfile, splitext, getmtime
+import os
+from os.path import join, split, relpath, splitext, getmtime
 from datetime import datetime, timezone
 import logging
 
@@ -154,22 +154,12 @@ class FsRepoCspItem(FsRepoItem):
 
 # ==========
 
-def main(cfgfile):
-    cfg = get_config(cfgfile)
+def main():
+    cfg = get_config()
     repo = get_data(cfg)
 
     for item in repo.src_items:
         print(item.name, len(item.data))
 
-
 if __name__ == "__main__":
-    if len(sys.argv) < 2:
-        print(f"Usage: {sys.argv[0]} <configfile>")
-        sys.exit(1)
-
-    cfgfile = sys.argv[1]
-    if not exists(cfgfile) or not isfile(cfgfile):
-        print(f"File {cfgfile} not found.\nUsage: {sys.argv[0]} <configfile>")
-        sys.exit(1)
-    
-    main(cfgfile)
+    main()

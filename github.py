@@ -6,6 +6,7 @@ import urllib.request as urq
 import logging
 import io
 from zipfile import ZipFile, ZipInfo
+from typing import List
 
 
 def get_data(config):
@@ -25,9 +26,9 @@ class ZipRepo:
         self.config = config
         self.zip = zip
 
-        self.src_items:ZipRepoItem = []
-        self.data_items:ZipRepoItem = []
-        self.csp_items:ZipRepoCspItem = []
+        self.src_items:List[ZipRepoItem] = []
+        self.data_items:List[ZipRepoItem] = []
+        self.csp_items:List[ZipRepoCspItem] = []
         self.name:str = ''
 
         self.get_names()

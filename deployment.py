@@ -80,15 +80,15 @@ def append_export_notes(config, repo, root:etree.Element):
     projectitems.append(f'<ProjectItem name="EnsExportNotes.{docname}.PTD" type="PTD"></ProjectItem>')
 
     # Create and add project to deployment
-    projectitems = '\n'.join(projectitems)
-    data = PROJECT_TPL.format(name=docname, local_ts=local_ts, utc_ts=utc_ts, source=source, items=projectitems)
+    itemstxt = '\n'.join(projectitems)
+    data = PROJECT_TPL.format(name=docname, local_ts=local_ts, utc_ts=utc_ts, source=source, items=itemstxt)
     el = etree.fromstring(data)
     el.tail = '\n\n'
     root.append(el)
     
     # Create and add deployment notes to deployment
-    items = '\n'.join(items)
-    data = DPL_NOTES_TPL.format(docname=docname, machine=machine, utc=utc_ts, notes=notes, items=items)
+    itemstxt = '\n'.join(items)
+    data = DPL_NOTES_TPL.format(docname=docname, machine=machine, utc=utc_ts, notes=notes, items=itemstxt)
     parser = etree.XMLParser(strip_cdata=False)
     el = etree.fromstring(data, parser=parser)
     el.tail = '\n\n'

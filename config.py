@@ -75,7 +75,7 @@ def merge_overrides(args:argparse.Namespace, config:ns.Namespace):
         value = getattr(args, cast(str, arg['name']))
         if not value:
             continue
-        ns.set_in_path(config, arg['path'], value)
+        ns.set_in_path(config, cast(str, arg['path']), value)
         
 
 def check(config:ns.Namespace):

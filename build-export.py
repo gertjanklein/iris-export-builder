@@ -297,6 +297,8 @@ def setup_urllib(config):
 
 
 def get_repo(config):
+    """Returns the configured repository."""
+
     if config.Source.type == 'github':
         from github import get_data
     elif config.Source.type == 'directory':
@@ -308,11 +310,12 @@ def get_repo(config):
 
 def save_export(export:BytesIO, filename:str):
     """Saves the export to a file; ensures Windows line endings."""
-    export = export.getvalue()
-    export = export.replace(b'\r', b'')
-    export = export.replace(b'\n', b'\r\n')
+
+    data = export.getvalue()
+    data = data.replace(b'\r', b'')
+    data = data.replace(b'\n', b'\r\n')
     with open(filename, mode='wb') as f:
-        f.write(export)
+        f.write(data)
 
 
 if __name__ == '__main__':
