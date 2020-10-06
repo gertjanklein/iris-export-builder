@@ -34,13 +34,21 @@ def run(config):
 
     # Create root element for export
     root = etree.Element('Export')
-    root.attrib['generator'] = 'IRIS'
-    root.attrib['version'] = '26'
     root.text = '\n'
     root.tail = '\n'
 
     # Create the export by adding nodes for each item
-    skipped = create_export(config, repo, root)
+    skipped, minver, maxver = create_export(config, repo, root)
+    if minver < maxver:
+        logging.warning(f"Warning: source export version differ (between {minver} and {maxver}).")
+    if maxver > 25:
+        # IRIS exports
+        root.attrib['generator'] = 'IRIS'
+        root.attrib['version'] = str(maxver)
+    else:
+        # Cache exports
+        root.attrib['generator'] = 'Cache'
+        root.attrib['version'] = str(maxver)
 
     # Determine export filename and write the output
     export_name = get_export_name(config, repo.name)
@@ -71,7 +79,7 @@ def run(config):
 def create_export(config, repo, root:etree.Element):
     """Create the export from the items in the repo object."""
     
-    skipped = 0
+    skipped = minver = maxver = 0
     is_udl = config.Source.srctype == 'udl'
     parser = etree.XMLParser(strip_cdata=False)
 
@@ -84,6 +92,9 @@ def create_export(config, repo, root:etree.Element):
             logging.info(f'Adding {item.name}')
             export = item.data
         export_root = etree.fromstring(export.encode('UTF-8'), parser=parser)
+        version = int(export_root.attrib['version'])
+        if not minver or minver > version: minver = version
+        if version > maxver: maxver = version
         if config.Source.type == 'directory':
             # Use local filesystem last update timestamp
             update_timestamp(export_root, item)
@@ -109,7 +120,7 @@ def create_export(config, repo, root:etree.Element):
     if config.Local.deployment:
         append_export_notes(config, repo, root)
     
-    return skipped
+    return skipped, minver, maxver
 
 
 def export_csp_separate(config, repo, export_name):
