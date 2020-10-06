@@ -295,6 +295,13 @@ def setup_urllib(config):
     opener = urq.build_opener(auth_handler, cookie_handler)
     urq.install_opener(opener)
 
+    url = f"http://{svr.host}:{svr.port}/api/atelier/"
+    try:
+        urq.urlopen(url)
+    except urq.URLError as e:
+        msg = f"Error connecting to server for converting UDL to XML:\n{e}."
+        raise ConfigurationError(msg) from None
+
 
 def get_repo(config):
     """Returns the configured repository."""
