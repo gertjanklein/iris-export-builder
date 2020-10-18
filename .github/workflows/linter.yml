@@ -27,6 +27,5 @@ jobs:
         if [ -f requirements_test.txt ]; then pip install -r requirements_test.txt; fi
     - name: Test with pytest
       run: |
-        pytest
-      env:
-        PYTHONPATH: $GITHUB_WORKSPACE
+        python -m pytest tests/
+
