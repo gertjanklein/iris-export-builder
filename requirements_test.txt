@@ -1,6 +1,5 @@
 toml
 lxml
-PyInstaller
 pylint
 pytest
 pytest-docker
