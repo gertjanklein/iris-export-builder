@@ -1,7 +1,7 @@
 
 """Retrieve and parse a release from GitHub."""
 
-from os.path import splitext
+from os.path import split, splitext
 import urllib.request as urq
 import logging
 import io
@@ -70,14 +70,14 @@ class ZipRepo:
             # Configure separately for CSP and source?
             encoding = self.config.Source.encoding
 
-            if parts[1] == cspdir:
+            if path_matches(cspdir, parts[1:]):
                 self.csp_items.append(ZipRepoCspItem(self.zip, item, cspdir, encoding))
             
             # Data is XML export, already encoded in UTF-8
-            elif parts[1] == datadir:
+            elif path_matches(datadir, parts[1:]):
                 self.data_items.append(ZipRepoItem(self.zip, item, cspdir, 'UTF-8'))
             
-            elif srcdir in ('', parts[1]):
+            elif srcdir == '' or path_matches(srcdir, parts[1:]):
                 # Non-CSP items always have a type
                 if not '.' in parts[-1]: continue
                 self.src_items.append(ZipRepoItem(self.zip, item, srcdir, encoding))
@@ -155,3 +155,9 @@ def get_zip(url, token):
         data = io.BytesIO(rsp.read())
     return ZipFile(data)
 
+
+def path_matches(cfgdir:str, parts:List[str]):
+    # Normalize to forward slashes
+    cfgdir = cfgdir.replace('\\', '/')
+    cfg = cfgdir.split('/')
+    return parts[0:len(cfg)] == cfg
