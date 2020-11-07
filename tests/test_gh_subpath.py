@@ -28,7 +28,7 @@ outfile = 'out.xml'
 
 def get_credentials():
     name = join(dirname(__file__), 'server.toml')
-    if not exists:
+    if not exists(name):
         return ''
     with open(name) as f:
         svr = f.read()
