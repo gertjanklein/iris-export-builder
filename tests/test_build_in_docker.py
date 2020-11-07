@@ -1,7 +1,5 @@
-from unittest.mock import patch
-from importlib import import_module, reload
+from importlib import import_module
 import binascii
-import logging
 from os.path import dirname, join, exists
 from io import BytesIO, StringIO
 from typing import Any
@@ -15,7 +13,6 @@ from requests.auth import HTTPBasicAuth
 
 from lxml import etree
 
-import config
 builder = import_module("build-export") # type: Any
 
 
@@ -51,7 +48,7 @@ outfile = 'out.xml'
 
 @pytest.mark.skipif(NODOCKER, reason="Docker not available.")
 @pytest.mark.usefixtures("reload_modules")
-def test_build(tmpdir, iris):
+def test_build(tmpdir, iris, get_build):
     """Retrieve and build specific packge."""
     host, port = iris
     cfg = CFG.format(host=host, port=port)
@@ -64,7 +61,7 @@ def test_build(tmpdir, iris):
 
 @pytest.mark.skipif(NODOCKER, reason="Docker not available.")
 @pytest.mark.usefixtures("reload_modules")
-def test_build_deployment(tmpdir, iris):
+def test_build_deployment(tmpdir, iris, get_build):
     """Check creating deployment."""
     host, port = iris
     cfg = CFG.format(host=host, port=port) + "\ndeployment = true"
@@ -103,39 +100,6 @@ def validate_schema(export, schema_filename):
 
 
 # =====
-
-def get_build(toml:str, tmpdir):
-    """Retrieves a build using the toml config passed in."""
-    
-    cfgfile = str(tmpdir.join('cfg.toml'))
-    with open(cfgfile, 'wt') as f:
-        f.write(toml)
-    
-    args = ['builder', cfgfile, '--no-gui']
-    with patch('sys.argv', args):
-        cfg = config.get_config()
-    builder.run(cfg)
-    
-    outfile = str(tmpdir.join('out.xml'))
-    with open(outfile, 'rb') as bf:
-        export = bf.read()
-
-    # Cleanup: log handler still has log file open
-    logging.getLogger().handlers.clear()
-
-    return export
-
-
-@pytest.fixture(scope="function")
-def reload_modules():
-    """Reload modules to clear state for new test."""
-
-    # Reload after running the test
-    yield
-    reload(config)
-    reload(builder)
-    reload(logging)
-
 
 @pytest.fixture(scope="session")
 def iris(docker_ip, docker_services):
