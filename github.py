@@ -1,7 +1,7 @@
 
 """Retrieve and parse a release from GitHub."""
 
-from os.path import split, splitext
+from os.path import splitext
 import urllib.request as urq
 import logging
 import io
