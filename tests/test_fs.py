@@ -43,7 +43,6 @@ def test_subpath_all(tmp_path, get_build):
     assert tree.find('/Class[@name="tmp.cls2"]') is not None, "tmp.cls2 not in export"
 
 
-@pytest.mark.skip(reason="Subpaths not yet implemented for filesystem repos")
 @pytest.mark.usefixtures("reload_modules", "create_src_tree")
 def test_subpath_a(tmp_path, get_build):
     cfg = CFG.format(path=tmp_path, srcdir='src/a')
@@ -52,7 +51,7 @@ def test_subpath_a(tmp_path, get_build):
     tree = etree.parse(BytesIO(export))
     assert tree.docinfo.root_name == 'Export'
     assert tree.find('/Class[@name="tmp.cls1"]') is not None, "tmp.cls1 not in export"
-    assert tree.find('/Class[@name="tmp.cls2"]') is not None, "tmp.cls2 not in export"
+    assert tree.find('/Class[@name="tmp.cls2"]') is None, "tmp.cls2 in export"
 
 
 # =====

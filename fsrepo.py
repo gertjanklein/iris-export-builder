@@ -3,6 +3,7 @@ import os
 from os.path import join, split, relpath, splitext, getmtime
 from datetime import datetime, timezone
 import logging
+from typing import List
 
 from config import get_config
 
@@ -42,21 +43,21 @@ class FsRepo:
             
             parts = name.split(os.sep)
 
-            if parts[0] == cspdir:
+            if path_matches(cspdir, parts):
                 base = join(dir, cspdir)
                 name = relpath(join(dir, name), base)
                 if os.sep != '/':
                     name = '/'.join(name.split(os.sep))
                 self.csp_items.append(FsRepoCspItem(base, name, encoding))
 
-            elif parts[0] == datadir:
+            elif path_matches(datadir, parts):
                 base = join(dir, datadir)
                 name = relpath(join(dir, name), base)
                 if os.sep != '/':
                     name = '/'.join(name.split(os.sep))
                 self.data_items.append(FsRepoItem(base, name, encoding))
 
-            elif srcdir in ('', parts[0]):
+            elif srcdir == '' or path_matches(srcdir, parts):
                 base = join(dir, srcdir)
                 name = relpath(join(dir, name), base)
                 if os.sep != '/':
@@ -80,7 +81,6 @@ class FsRepo:
                 relative = ''
             for file in files:
                 yield join(relative, file)
-
 
 
 class FsRepoItem:
@@ -150,6 +150,13 @@ class FsRepoCspItem(FsRepoItem):
             data = data.replace('\r', '')
 
         return data
+
+
+def path_matches(cfgdir:str, parts:List[str]):
+    # Normalize to forward slashes
+    cfgdir = cfgdir.replace('\\', '/')
+    cfg = cfgdir.split('/')
+    return parts[0:len(cfg)] == cfg
 
 
 # ==========
