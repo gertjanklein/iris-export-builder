@@ -63,6 +63,6 @@ def test_subpath(tmp_path, get_build):
 
     tree = etree.parse(BytesIO(export))
     assert tree.docinfo.root_name == 'Export'
-    assert tree.find('/Class[@name="dc.Sample.Person"]') is None, "dc.Sample.Person in export"
-    assert tree.find('/Class[@name="Sample.REST.Base"]') is not None, "Sample.REST.Base not in export"
+    assert tree.find('/Class[@name="dc.Sample.Person"]') is None, "dc.Sample.Person not in export"
+    assert tree.find('/Class[@name="Sample.REST.Base"]') is not None, "Sample.REST.Base in export"
 
