@@ -9,9 +9,8 @@ import pytest
 
 builder = import_module("build-export") # type: Any
 
-# Configuration to retrieve a specific checkin of (part of) the Strix
-# package from GitHub, and create an export from it; this should
-# always yield the same result.
+# Configuration to retrieve a specific checkin of a
+# package from GitHub, and create an export from it.
 CFG = """
 [Source]
 type = "github"
@@ -26,6 +25,7 @@ outfile = 'out.xml'
 """
 
 
+# Check for server location and credentials for UDL-XML conversion
 def get_credentials():
     name = join(dirname(__file__), 'server.toml')
     if not exists(name):
