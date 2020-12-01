@@ -40,6 +40,8 @@ def get_build():
             export = bf.read()
 
         # Cleanup: log handler still has log file open
+        for h in logging.getLogger().handlers:
+            h.close()
         logging.getLogger().handlers.clear()
 
         return export
