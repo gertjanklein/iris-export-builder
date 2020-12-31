@@ -146,7 +146,7 @@ def check_default(section:Namespace, name:str, default) -> bool:
         return True
     return False
 
-def check_oneof(section:Namespace, name:str, oneof:Iterable[str], default=None):
+def check_oneof(section:Namespace, name:str, oneof:Iterable, default=None):
     """Raises if value not in supplied list of options."""
 
     value = section._get(name)
