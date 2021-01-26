@@ -75,7 +75,7 @@ class ZipRepo:
             
             # Data is XML export, already encoded in UTF-8
             elif path_matches(datadir, parts[1:]):
-                self.data_items.append(ZipRepoItem(self.zip, item, cspdir, 'UTF-8'))
+                self.data_items.append(ZipRepoItem(self.zip, item, datadir, 'UTF-8'))
             
             elif srcdir == '' or path_matches(srcdir, parts[1:]):
                 # Non-CSP items always have a type
