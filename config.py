@@ -59,7 +59,7 @@ def get_config() -> ns.Namespace:
         spec = spec.replace('.', '\\.')
         # Create valid regex for star
         spec = spec.replace('*', '.*')
-        regex = re.compile(spec)
+        regex = re.compile(spec, re.I)
         config.skip_regexes.append(regex)
 
     return config
