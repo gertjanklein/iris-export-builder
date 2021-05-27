@@ -91,7 +91,8 @@ repo = ""
 # zip, e.g. release tags, branch names, commit ids (sha), etc.
 tag = "master"
 
-# GitHub security token to use (only needed for private repositories)
+# GitHub security token to use (only needed for private repositories).
+# Prefix with @ to specify a file containing the token.
 token = ''
 
 

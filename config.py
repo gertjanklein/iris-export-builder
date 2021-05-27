@@ -62,6 +62,17 @@ def get_config() -> ns.Namespace:
         regex = re.compile(spec, re.I)
         config.skip_regexes.append(regex)
 
+    # Load token contents from file, if specified
+    if config.GitHub.token and config.GitHub.token[0] == '@':
+        path = config.GitHub.token[1:]
+        if not isabs(path):
+            path = join(abspath(config.cfgdir), path)
+        try:
+            with open(path) as f:
+                config.GitHub.token = f.read().strip()
+        except OSError as e:
+            raise ConfigurationError(f"Error reading token file {path}: {e}") from None
+    
     return config
 
 
