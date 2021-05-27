@@ -1,3 +1,5 @@
+![Tests](https://github.com/gertjanklein/iris-export-builder/actions/workflows/run-pytest.yml/badge.svg)
+
 # iris-export-builder
 
 Creates a single Caché/IRIS export file from separate source files.
