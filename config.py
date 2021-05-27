@@ -123,16 +123,18 @@ def check(config:ns.Namespace):
     # Check CSP configuration
     if src.cspdir:
         csp = ns.check_section(config, 'CSP')
-        if ns.check_default(csp, 'parsers', []):
-            raise ConfigurationError("At least one [[CSP.parsers]] section for CSP items should be present.")
-        for i, parser in enumerate(csp.parsers):
-            if not isinstance(parser, ns.Namespace):
-                raise ConfigurationError(f'Parser {i+1} must be a section.')
-            ns.check_notempty(parser, 'regex')
-            ns.check_notempty(parser, 'app')
-            ns.check_notempty(parser, 'item')
-            ns.check_oneof(parser, 'nomatch', ('skip', 'error'), 'error')
-        ns.check_oneof(csp, 'export', ('embed', 'separate'), 'embed')
+        ns.check_oneof(csp, 'export', ('embed', 'separate', 'none'), 'embed')
+        if not csp.export == 'none':
+            # Only check these if we are to export CSP files
+            if ns.check_default(csp, 'parsers', []):
+                raise ConfigurationError("At least one [[CSP.parsers]] section for CSP items should be present.")
+            for i, parser in enumerate(csp.parsers):
+                if not isinstance(parser, ns.Namespace):
+                    raise ConfigurationError(f'Parser {i+1} must be a section.')
+                ns.check_notempty(parser, 'regex')
+                ns.check_notempty(parser, 'app')
+                ns.check_notempty(parser, 'item')
+                ns.check_oneof(parser, 'nomatch', ('skip', 'error'), 'error')
         
         # CSP items appear unsupported in deployments, so must be exported separately
         if local.deployment and csp.export == 'embed':

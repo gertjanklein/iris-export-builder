@@ -44,6 +44,7 @@ skip = [
 # - embed: CSP items are added to the export file. This is the default.
 # - separate: a separate export file will be created for CSP items. The
 #     name of the file will be the export name with _csp appended.
+# - none: do not export CSP items
 export = 'embed'
 
 
