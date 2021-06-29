@@ -1,5 +1,8 @@
 toml
 lxml
+requests
 pylint
 pytest
 pytest-docker
+mypy
+types-requests

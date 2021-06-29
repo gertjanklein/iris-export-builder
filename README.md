@@ -97,8 +97,9 @@ the name of the export, and whether to make it a deployment or not.
 ## Usage
 
 The program is a (non-console) python script. It uses the
-[toml](https://pypi.org/project/toml/) and
-[lxml](https://pypi.org/project/lxml/) libraries.
+[toml](https://pypi.org/project/toml/), 
+[lxml](https://pypi.org/project/lxml/) and
+[requests](https://pypi.org/project/requests/) libraries.
 
 Releases, containing pre-built single file executables, can be found
 [here](https://github.com/gertjanklein/iris-export-builder/releases).
