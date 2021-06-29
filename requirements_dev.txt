@@ -6,3 +6,4 @@ pytest
 pytest-docker
 mypy
 types-requests
+pyinstaller
