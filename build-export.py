@@ -1,33 +1,34 @@
-#!/usr/bin/env python3
-# encoding: UTF-8
-
 import os
 from os.path import dirname, join, isabs, exists, splitext, basename
 import re
 import logging
-import urllib.request as urq
 import datetime
-import http.cookiejar
-import json
 import base64
 from io import BytesIO
 
+import requests
 from lxml import etree
 
 from config import get_config, ConfigurationError, msgbox
 from deployment import append_export_notes
 
 
+# Session to use for UDL->XML conversion
+session: requests.Session
+
+
 def main():
     # Get configuration and handle command line arguments
     config = get_config()
     run(config)
+    if session:
+        session.close()
 
 
 def run(config):
     # Setup basic auth handler for IRIS, if we need to convert UDL to XML
     if config.Source.srctype == 'udl':
-        setup_urllib(config)
+        setup_session(config)
 
     # Get object representing repo
     repo = get_repo(config)
@@ -156,11 +157,11 @@ def convert_to_xml(config, item):
 
     svr = config.Server
     url = f"http://{svr.host}:{svr.port}/api/atelier/v1/{svr.namespace}/cvt/doc/xml"
-    rq = urq.Request(url, method='POST', data=data, headers={'Content-Type': 'text/plain; charset=utf-8'})
     
     # Get and convert from JSON
-    with urq.urlopen(rq) as rsp:
-        data = json.load(rsp)
+    rsp = session.post(url, data=data, headers={'Content-Type': 'text/plain; charset=utf-8'})
+    data = rsp.json()
+    
     # Errors are returned here, not in data['status']['errors']
     status = data['result']['status']
     if status:
@@ -288,28 +289,15 @@ def get_export_name(config, repo_name):
     return name
 
 
-def setup_urllib(config):
-    """ Setup urllib opener for auth and cookie handling """
-
-    # Setup a (preemptive) basic auth handler
-    password_mgr = urq.HTTPPasswordMgrWithPriorAuth()
+def setup_session(config):
+    global session
     svr = config.Server
-    password_mgr.add_password(None, f"http://{svr.host}:{svr.port}/",
-        svr.user, svr.password, is_authenticated=True)
-    auth_handler = urq.HTTPBasicAuthHandler(password_mgr)
-
-    # Setup the cookie handler
-    cookiejar = http.cookiejar.LWPCookieJar()
-    cookie_handler = urq.HTTPCookieProcessor(cookiejar)
-
-    # Create an opener using these handlers, and make it default
-    opener = urq.build_opener(auth_handler, cookie_handler)
-    urq.install_opener(opener)
-
+    session = requests.Session()
+    session.auth = (svr.user, svr.password)
     url = f"http://{svr.host}:{svr.port}/api/atelier/"
     try:
-        urq.urlopen(url)
-    except urq.URLError as e:
+        session.get(url)
+    except requests.RequestException as e:
         msg = f"Error connecting to server for converting UDL to XML:\n{e}."
         raise ConfigurationError(msg) from None
 
