@@ -37,3 +37,15 @@ def test_get_in_path():
     cfg.Section = ''
     assert ns.get_in_path(cfg, 'Section.value') is None
     
+def test_add_section():
+    """ Tests adding a section if not present
+    """
+    cfg = ns.Namespace()
+    section = ns.get_section(cfg, 'test')
+    assert section is None
+    assert 'test' not in cfg
+    assert ns.get_in_path(cfg, 'Section.value') is None
+    section = ns.get_section(cfg, 'test', True)
+    assert section is not None
+    assert 'test' in cfg
+    assert cfg['test'] is section

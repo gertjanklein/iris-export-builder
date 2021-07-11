@@ -117,12 +117,19 @@ def get_in_path(ns:Namespace, path:str, default=None):
 class ConfigurationError(ValueError):
     """Exception to signal detected error in configuration."""
 
-def get_section(config:Namespace, name:str) -> Optional[Namespace]:
-    """Returns a section if it exists."""
+def get_section(config:Namespace, name:str, create=False) -> Optional[Namespace]:
+    """Returns a section if it exists; optionally creates if not."""
     
     section = config._get(name)
     if section is None:
-        return None
+        if not create:
+            return None
+        
+        section = Namespace()
+        config[name] = section
+        config[name]['_name'] = name
+        return section
+        
     if not isinstance(section, Namespace):
         raise ConfigurationError(f"Configuration error: {name} not a section")
     return section
