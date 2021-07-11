@@ -63,7 +63,7 @@ def get_config() -> ns.Namespace:
         config.skip_regexes.append(regex)
 
     # Load token contents from file, if specified
-    if 'GitHub' in config and config.GitHub.token and config.GitHub.token[0] == '@':
+    if config.Source.type == 'github' and config.GitHub.token and config.GitHub.token[0] == '@':
         path = config.GitHub.token[1:]
         if not isabs(path):
             path = join(abspath(config.cfgdir), path)
