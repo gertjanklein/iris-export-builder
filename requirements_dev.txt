@@ -7,4 +7,5 @@ pytest
 pytest-docker
 mypy
 types-requests
+types-toml
 pyinstaller
