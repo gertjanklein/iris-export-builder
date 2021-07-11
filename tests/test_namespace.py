@@ -16,7 +16,7 @@ def test_set_in_path_section_exists():
     cfg = ns.Namespace()
     cfg.Section = ns.Namespace()
     ns.set_in_path(cfg, "Section.name", '42')
-    assert cfg.Section.name == '42'
+    assert cfg.Section.name == '42' # pylint: disable=no-member
 
 def test_del():
     cfg = ns.Namespace()
