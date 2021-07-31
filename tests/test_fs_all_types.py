@@ -10,11 +10,6 @@ import pytest
 builder = import_module("build-export") # type: Any
 
 
-# Tests creating a combined export, containing items of all three
-# types (source, CSP and data). Uses non-Latin1 content to make
-# sure encoding/decoding works properly.
-
-
 CFG = """
 [Source]
 type = "directory"
@@ -23,6 +18,8 @@ srcdir = 'src'
 cspdir = 'csp'
 datadir = 'data'
 [CSP]
+export = 'embed'
+[Data]
 export = 'embed'
 [[CSP.parsers]]
 regex = '((/csp)?/[^/]+)/(.+)'
@@ -36,12 +33,12 @@ outfile = 'out.xml'
 """
 
 
-@pytest.mark.usefixtures("reload_modules", "create_src_tree")
-def test_all_types(tmp_path, get_build, validate_schema):
+@pytest.mark.usefixtures("reload_modules")
+def test_all_types(src_tree, get_build, validate_schema):
     """ Tests creating an export with src, csp, and data items. """
 
-    cfg = CFG.format(path=tmp_path)
-    export = get_build(cfg, tmp_path)
+    cfg = CFG.format(path=src_tree)
+    export = get_build(cfg, src_tree)
 
     tree = etree.parse(BytesIO(export))
     assert tree.docinfo.root_name == 'Export'
@@ -63,6 +60,66 @@ def test_all_types(tmp_path, get_build, validate_schema):
     assert tree.find('/Document[@name="Ens.Config.DefaultSettings.esd"]/defaultSettings/item/[@item="Test"]') is not None, "Test default setting not in export"
 
     validate_schema(export)
+
+
+# -----
+
+@pytest.mark.usefixtures("reload_modules")
+def test_all_types_separate(src_tree, get_build_separate, validate_schema):
+    """ Tests separate exports for source, CSP, and data """
+
+    cfg = CFG.format(path=src_tree)
+    cfg = cfg.replace("'embed'", "'separate'")
+    src_export, csp_export, data_export = get_build_separate(cfg, src_tree)
+
+    # === Check export of source items
+
+    tree = etree.parse(BytesIO(src_export))
+    assert tree.docinfo.root_name == 'Export'
+
+    assert tree.find('/Class[@name="tmp.a"]') is not None, "tmp.a not in export"
+    assert tree.find('/Class[@name="tmp.b"]') is not None, "tmp.b not in export"
+    assert tree.find('/Class[@name="tmp.c.cc"]') is not None, "tmp.c.cc not in export"
+    
+    assert tree.find('/Routine[@name="Include"][@type="INC"]') is not None, "Routine.inc not in export"
+    
+    # There should be no CSP items and no data items in the export
+    assert tree.find('/CSP[@name="hello.csp"]') is None, "hello.csp in export"
+    assert tree.find('/Document[@name="Test.LUT"]') is None, "Test.LUT in export"
+
+    validate_schema(src_export)
+
+    # === Check export of CSP items
+
+    tree = etree.parse(BytesIO(csp_export))
+    assert tree.docinfo.root_name == 'Export'
+
+    assert tree.find('/CSP[@name="hello.csp"]') is not None, "hello.csp not in export"
+    assert tree.find('/CSP[@name="goodbye.csp"]') is not None, "goodbye.csp not in export"
+    assert tree.find('/CSPBase64[@name="binary.bin"]') is not None, "binary.bin not in export"
+    
+    # There should be no source items and no data items in the export
+    assert tree.find('/Class[@name="tmp.a"]') is None, "tmp.a in export"
+    assert tree.find('/Document[@name="Test.LUT"]') is None, "Test.LUT in export"
+
+    validate_schema(csp_export)
+
+    # === Check export of data items
+
+    tree = etree.parse(BytesIO(data_export))
+    assert tree.docinfo.root_name == 'Export'
+
+    assert tree.find('/Document[@name="Test.LUT"]') is not None, "Test.LUT not in export"
+    assert tree.find('/Document[@name="Test.LUT"]/lookupTable/entry[@table="Test"]') is not None, "Test entry of lookup table not in export"
+
+    assert tree.find('/Document[@name="Ens.Config.DefaultSettings.esd"]') is not None, "Ens.Config.DefaultSettings.esd not in export"
+    assert tree.find('/Document[@name="Ens.Config.DefaultSettings.esd"]/defaultSettings/item/[@item="Test"]') is not None, "Test default setting not in export"
+
+    # There should be no source items and no CSP items in the export
+    assert tree.find('/Class[@name="tmp.a"]') is None, "tmp.a in export"
+    assert tree.find('/CSP[@name="hello.csp"]') is None, "hello.csp in export"
+
+    validate_schema(data_export)
 
 
 # =====
@@ -124,28 +181,36 @@ ESD_TPL = """\
 """
 
 
-@pytest.fixture(scope="function")
-def create_src_tree(tmp_path:Path):
+@pytest.fixture(scope="module")
+def src_tree(tmp_path_factory):
+    """ Creates a source tree with items of all types.
+
+    Used in all tests in this module. Returns the base directory
+    for the source tree.
+    """
+    # Create a base temp directory for this module
+    base = tmp_path_factory.mktemp(__name__, numbered=True) # type: Path
+
     # Two classes directly in the root of the source dir
-    dir = tmp_path / 'src'
+    dir = base / 'src'
     dir.mkdir(parents=True)
     for name in 'a', 'b':
         file = dir / f"{name}.xml"
         file.write_text(CLS_TPL.format(name=f"tmp.{name}"), encoding='UTF-8')
     
     # A class one level deeper
-    dir = tmp_path / 'src' / 'c'
+    dir = base / 'src' / 'c'
     dir.mkdir(parents=True)
     file = dir / "cc.xml"
     file.write_text(CLS_TPL.format(name="tmp.c.cc"), encoding='UTF-8')
     
     # An include file
-    dir = tmp_path / 'src'
+    dir = base / 'src'
     file = dir / "Include.inc"
     file.write_text(INC_TPL, encoding='UTF-8')
     
     # Two csp files under application directory /app
-    dir = tmp_path / 'csp' / 'app'
+    dir = base / 'csp' / 'app'
     dir.mkdir(parents=True)
     for name in 'hello', 'goodbye':
         file = dir / f"{name}.csp"
@@ -156,7 +221,7 @@ def create_src_tree(tmp_path:Path):
     file.write_text('abc')
 
     # Data dir
-    dir = tmp_path / 'data'
+    dir = base / 'data'
     dir.mkdir(parents=True)
 
     # ... with a lookup table
@@ -166,5 +231,7 @@ def create_src_tree(tmp_path:Path):
     # ... and a systems default settings export
     file = dir / "Settings.esd"
     file.write_text(ESD_TPL, encoding='UTF-8')
+
+    return base
     
     

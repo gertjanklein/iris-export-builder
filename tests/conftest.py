@@ -53,6 +53,54 @@ def get_build():
 
 
 @pytest.fixture
+def get_build_separate():
+    def get_build(toml:str, tmp_path):
+        """Retrieves a build using the toml config passed in."""
+        
+        # Write configuration TOML
+        cfgfile = str(tmp_path / 'cfg.toml')
+        with open(cfgfile, 'wt') as f:
+            f.write(toml)
+        
+        # Create build (in multiple files)
+        args = ['builder', cfgfile, '--no-gui']
+        with patch('sys.argv', args):
+            cfg = config.get_config()
+        builder.run(cfg)
+        
+        # Get source export
+        src_file = str(tmp_path / 'out.xml')
+        with open(src_file, 'rb') as bf:
+            src_export = bf.read()
+        
+        # Get CSP export (if it exists)
+        csp_file = str(tmp_path / 'out_csp.xml')
+        if exists(csp_file):
+            with open(csp_file, 'rb') as bf:
+                csp_export = bf.read()
+        else:
+            csp_export = b''
+        
+        # Get data export (if it exists)
+        data_file = str(tmp_path / 'out_data.xml')
+        if exists(data_file):
+            with open(data_file, 'rb') as bf:
+                data_export = bf.read()
+        else:
+            data_export = b''
+
+        # Cleanup: log handler still has log file open
+        for h in logging.getLogger().handlers:
+            h.close()
+        logging.getLogger().handlers.clear()
+
+        return src_export, csp_export, data_export
+        
+    return get_build
+
+
+
+@pytest.fixture
 def validate_schema():
     def validate_schema(export, schema_file='irisexport.xsd'):
         """Validate the export against the schema file, if it exists."""
