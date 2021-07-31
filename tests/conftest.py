@@ -4,6 +4,7 @@ from unittest.mock import patch
 from os.path import dirname, join, exists
 from io import BytesIO
 import logging
+from pathlib import Path
 
 from typing import Any
 
@@ -116,3 +117,115 @@ def validate_schema():
         assert valid, f"Export schema validation failed: {schema.error_log.last_error}"
     return validate_schema
 
+
+# =====
+
+# Class export template (XML)
+CLS_TPL = """\
+<?xml version='1.0' encoding='UTF-8'?>
+<Export generator="IRIS" version="26">
+<Class name="{name}">
+<Description>Non-latin: €ş.</Description>
+<Super>%RegisteredObject</Super>
+</Class>
+</Export>
+"""
+
+INC_TPL = """\
+<?xml version='1.0' encoding='UTF-8'?>
+<Export generator="IRIS" version="26">
+<Routine name="Include" type="INC"><![CDATA[
+#define Hello "World €ş."
+]]></Routine>
+</Export>
+"""
+
+# CSP file template
+CSP_TPL = """\
+<!DOCTYPE html>
+<html>
+<head><title>{name}</title></head>
+<body>
+<h1>{name}</h1>
+Non-latin: €ş.
+</body>
+</html>
+"""
+
+# Lookup table export template
+LUT_TPL = """\
+<?xml version='1.0' encoding='UTF-8'?>
+<Export generator="IRIS" version="26">
+<Document name="{name}.LUT">
+<lookupTable>
+<entry table="{name}" key="test_key">Non-latin: €ş.</entry>
+</lookupTable>
+</Document>
+</Export>
+"""
+
+# Ensemble system default settings export template
+ESD_TPL = """\
+<?xml version='1.0' encoding='UTF-8'?>
+<Export generator="IRIS" version="26">
+<Document name="Ens.Config.DefaultSettings.esd">
+<defaultSettings>
+<item production="*" item="Test" class="*" setting="Test" value="Non-latin: €ş."><Deployable>true</Deployable></item>
+</defaultSettings>
+</Document>
+</Export>
+"""
+
+
+@pytest.fixture(scope="session")
+def src_tree(tmp_path_factory):
+    """ Creates a source tree with items of all types.
+
+    Used in all tests in this module. Returns the base directory
+    for the source tree.
+    """
+    # Create a base temp directory for this module
+    base = tmp_path_factory.mktemp("basic_source_tree", numbered=True) # type: Path
+    
+    # Two classes directly in the root of the source dir
+    dir = base / 'src'
+    dir.mkdir(parents=True)
+    for name in 'a', 'b':
+        file = dir / f"{name}.cls.xml"
+        file.write_text(CLS_TPL.format(name=f"tmp.{name}"), encoding='UTF-8')
+    
+    # A class one level deeper
+    dir = base / 'src' / 'c'
+    dir.mkdir(parents=True)
+    file = dir / "cc.cls.xml"
+    file.write_text(CLS_TPL.format(name="tmp.c.cc"), encoding='UTF-8')
+    
+    # An include file
+    dir = base / 'src'
+    file = dir / "Include.inc.xml"
+    file.write_text(INC_TPL, encoding='UTF-8')
+    
+    # Two csp files under application directory /app
+    dir = base / 'csp' / 'app'
+    dir.mkdir(parents=True)
+    for name in 'hello', 'goodbye':
+        file = dir / f"{name}.csp"
+        file.write_text(CSP_TPL.format(name=name), encoding='UTF-8')
+    
+    # A binary-type CSP file (does not need actual 'binary' data)
+    file = dir / "binary.bin"
+    file.write_text('abc')
+
+    # Data dir
+    dir = base / 'data'
+    dir.mkdir(parents=True)
+
+    # ... with a lookup table
+    file = dir / "Test.lut.xml"
+    file.write_text(LUT_TPL.format(name="Test"), encoding='UTF-8')
+
+    # ... and a systems default settings export
+    file = dir / "Settings.esd.xml"
+    file.write_text(ESD_TPL, encoding='UTF-8')
+
+    return base
