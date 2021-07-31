@@ -15,31 +15,6 @@ from config import ConfigurationError
 tls = threading.local()
 
 
-def setup_session(config:ns.Namespace):
-    """ Setup requests session for XML->UDL conversion
-    
-    The session is needed to honour IRIS session cookies and HTTP
-    keep-alive. To initialize the cookies, a single request is done
-    as part of the initialization.
-    """
-    
-    global tls
-
-    svr = config.Server
-    session = requests.Session()
-    session.auth = (svr.user, svr.password)
-    cookiefile = f"cookies;{svr['host']};{svr['port']}.txt"
-    session.cookies = http.cookiejar.LWPCookieJar(cookiefile) # type: ignore
-    url = f"http://{svr.host}:{svr.port}/api/atelier/"
-    try:
-        session.get(url)
-    except requests.RequestException as e:
-        msg = f"Error connecting to server for converting UDL to XML:\n{e}."
-        raise ConfigurationError(msg) from None
-    
-    tls.session = session
-
-
 def convert(config:ns.Namespace, items:list, threads:int = 1):
     """ Converts a list of items from UDL to XML """
 
@@ -100,6 +75,42 @@ def _convert_to_xml(config, item):
     item.xml = content
     
 
+# -----
+
+def setup_session(config:ns.Namespace):
+    """ Setup requests session for XML->UDL conversion
+    
+    The session is needed to honour IRIS session cookies and HTTP
+    keep-alive. To initialize the cookies, a single request is done
+    as part of the initialization.
+    """
+    
+    global tls
+
+    svr = config.Server
+    session = requests.Session()
+    session.auth = (svr.user, svr.password)
+    cookiefile = f"cookies;{svr['host']};{svr['port']}.txt"
+    session.cookies = http.cookiejar.LWPCookieJar(cookiefile) # type: ignore
+    url = f"http://{svr.host}:{svr.port}/api/atelier/"
+    try:
+        session.get(url)
+    except requests.RequestException as e:
+        msg = f"Error connecting to server for converting UDL to XML:\n{e}."
+        raise ConfigurationError(msg) from None
+    
+    tls.session = session
+
+
+def cleanup():
+    """ Closes the main requests session """
+    
+    if hasattr(tls, "session"):
+        tls.session.close()
+
+
+# -----
+
 def _init_thread(auth, cookie_data):
     """ Initializes the requests session object for a new thread """
     tls.session = requests.Session()
@@ -113,7 +124,8 @@ def _init_thread(auth, cookie_data):
 
 
 def _cleanup_thread():
-    """ Closes the request session before thread termination """
+    """ Closes the requests session before thread termination """
+
     if hasattr(tls, "session"):
         tls.session.close()
         # Slight delay so other threads get assigned a cleanup task as well

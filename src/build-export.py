@@ -5,7 +5,7 @@ import logging
 from config import get_config, ConfigurationError, msgbox
 from split_export import get_files, ExportFile
 from repo import RepositorySourceItem
-from convert import setup_session, convert
+from convert import setup_session, cleanup, convert
 from deployment import get_deployment_items
 
 
@@ -13,6 +13,7 @@ def main():
     # Get configuration and handle command line arguments
     config = get_config()
     run(config)
+    cleanup()
 
 
 def run(config):
