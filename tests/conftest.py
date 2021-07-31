@@ -1,9 +1,13 @@
 import sys
 from importlib import reload, import_module
 from unittest.mock import patch
+from os.path import dirname, join, exists
+from io import BytesIO
 import logging
+
 from typing import Any
 
+from lxml import etree
 import pytest
 
 import config
@@ -46,3 +50,22 @@ def get_build():
 
         return export
     return get_build
+
+
+@pytest.fixture
+def validate_schema():
+    def validate_schema(export, schema_file='irisexport.xsd'):
+        """Validate the export against the schema file, if it exists."""
+        
+        schema_filename = join(dirname(__file__), schema_file)
+        if not exists(schema_filename):
+            pytest.skip("No XSD to validate against")
+            return
+        tree = etree.parse(BytesIO(export))
+        with open(schema_filename, encoding='UTF-8') as f:
+            schema = etree.XMLSchema(etree.parse(f))
+        valid = schema.validate(tree)
+        # pylint: disable=no-member
+        assert valid, f"Export schema validation failed: {schema.error_log.last_error}"
+    return validate_schema
+

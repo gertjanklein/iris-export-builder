@@ -81,6 +81,17 @@ item = '\3'
 nomatch = 'error'
 
 
+##### Data items
+[Data]
+
+# How to handle the data export:
+# - embed: data items are added to the export file. This is the default.
+# - separate: a separate export file will be created for data items. The
+#     name of the file will be the export name with _data appended.
+# - none: do not export data items
+export = 'embed'
+
+
 ##### GitHub details
 [GitHub]
 

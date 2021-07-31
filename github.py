@@ -1,12 +1,14 @@
-
 """Retrieve and parse a release from GitHub."""
 
-from os.path import splitext
+from __future__ import annotations
+from typing import Sequence
+
 import urllib.request as urq
 import logging
 import io
 from zipfile import ZipFile, ZipInfo
-from typing import List
+
+from repo import Repository, RepositorySourceItem, RepositoryCspItem, RepositoryDataItem
 
 
 def get_data(config):
@@ -15,25 +17,23 @@ def get_data(config):
     gh = config['GitHub']
     url = f"https://github.com/{gh.user}/{gh.repo}/archive/{gh.tag}.zip"
     zf = get_zip(url, gh.token)
-    return ZipRepo(config, zf)
+    repo = ZipRepo(config, zf)
+    repo.get_names()
+    return repo
 
 
-class ZipRepo:
+class ZipRepo(Repository):
     """Handle a zipped repository."""
+    
+    src_items:Sequence[ZipRepoItem]
+    csp_items:Sequence[ZipRepoCspItem]
+    data_items:Sequence[ZipRepoDataItem]
 
     def __init__(self, config, zip:ZipFile):
-        super().__init__() 
-        self.config = config
+        super().__init__(config) 
         self.zip = zip
-
-        self.src_items:List[ZipRepoItem] = []
-        self.data_items:List[ZipRepoItem] = []
-        self.csp_items:List[ZipRepoCspItem] = []
-        self.name:str = ''
-
-        self.get_names()
     
-    
+
     def get_names(self):
         """Get names from zipfile and split in basename, items, and CSP items."""
         
@@ -75,7 +75,7 @@ class ZipRepo:
             
             # Data is XML export, already encoded in UTF-8
             elif path_matches(datadir, parts[1:]):
-                self.data_items.append(ZipRepoItem(self.zip, item, datadir, 'UTF-8'))
+                self.data_items.append(ZipRepoDataItem(self.zip, item, datadir, 'UTF-8'))
             
             elif srcdir == '' or path_matches(srcdir, parts[1:]):
                 # Non-CSP items always have a type
@@ -83,8 +83,8 @@ class ZipRepo:
                 self.src_items.append(ZipRepoItem(self.zip, item, srcdir, encoding))
 
 
-class ZipRepoItem:
-    """Normal repostitory item."""
+class ZipRepoItem(RepositorySourceItem):
+    """ Source repostitory item. """
     def __init__(self, zip:ZipFile, info:ZipInfo, prefix, encoding):
         super().__init__()
         self.zip = zip
@@ -112,8 +112,9 @@ class ZipRepoItem:
 
         return data
 
-class ZipRepoCspItem(ZipRepoItem):
-    """CSP-type repository item."""
+
+class ZipRepoCspItem(RepositoryCspItem, ZipRepoItem):
+    """ CSP-type repository item. """
 
     @property
     def relpath(self):
@@ -123,15 +124,6 @@ class ZipRepoCspItem(ZipRepoItem):
             parts = parts[1:]
         return '/' + '/'.join(parts)
        
-    @property
-    def is_text(self):
-        name = self.info.filename
-        ext = splitext(name)[1]
-        if not ext:
-            return False
-        ext = ext[1:]
-        return ext.lower() in "csp,csr,xml,js,css,xsl,xsd,txt,html".split(',')
-
     @property
     def data(self):
         with self.zip.open(self.info) as f:
@@ -145,6 +137,10 @@ class ZipRepoCspItem(ZipRepoItem):
         return data
 
 
+class ZipRepoDataItem(RepositoryDataItem, ZipRepoItem):
+    """ Data repository item. """
+
+
 def get_zip(url, token):
     """Return a ZipFile object downloaded from a url."""
 
@@ -156,7 +152,7 @@ def get_zip(url, token):
     return ZipFile(data)
 
 
-def path_matches(cfgdir:str, parts:List[str]):
+def path_matches(cfgdir:str, parts:Sequence[str]):
     # Normalize to forward slashes
     cfgdir = cfgdir.replace('\\', '/')
     cfg = cfgdir.split('/')

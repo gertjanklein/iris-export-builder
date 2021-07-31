@@ -1,28 +1,26 @@
+"""Retrieve and parse a release from the filesystem."""
+
+from __future__ import annotations
+from typing import Sequence
 
 import os
-from os.path import join, split, relpath, splitext, getmtime
+from os.path import join, split, relpath, getmtime
 from datetime import datetime, timezone
 import logging
-from typing import List
 
-from config import get_config
+from repo import Repository, RepositorySourceItem, RepositoryCspItem, RepositoryDataItem
 
 
 def get_data(config):
-    return FsRepo(config)
+    repo = FsRepo(config)
+    repo.get_names()
+    return repo
 
 
-class FsRepo:
-    def __init__(self, config):
-        super().__init__() 
-        self.config = config
-
-        self.src_items = []
-        self.data_items = []
-        self.csp_items = []
-        self.name:str = ''
-
-        self.get_names()
+class FsRepo(Repository):
+    src_items:Sequence[FsRepoItem]
+    csp_items:Sequence[FsRepoCspItem]
+    data_items:Sequence[FsRepoDataItem]
 
     def get_names(self):
         dir = self.config.Directory.path
@@ -55,7 +53,7 @@ class FsRepo:
                 name = relpath(join(dir, name), base)
                 if os.sep != '/':
                     name = '/'.join(name.split(os.sep))
-                self.data_items.append(FsRepoItem(base, name, encoding))
+                self.data_items.append(FsRepoDataItem(base, name, encoding))
 
             elif srcdir == '' or path_matches(srcdir, parts):
                 base = join(dir, srcdir)
@@ -83,7 +81,7 @@ class FsRepo:
                 yield join(relative, file)
 
 
-class FsRepoItem:
+class FsRepoItem(RepositorySourceItem):
     def __init__(self, base_dir, name, encoding):
         super().__init__()
         self.base_dir = base_dir
@@ -121,22 +119,13 @@ class FsRepoItem:
         return data
 
 
-class FsRepoCspItem(FsRepoItem):
+class FsRepoCspItem(RepositoryCspItem, FsRepoItem):
     """CSP-type repository item."""
 
     @property
     def relpath(self):
         return '/' + self.item_name
     
-    @property
-    def is_text(self):
-        name = self.item_name
-        ext = splitext(name)[1]
-        if not ext:
-            return False
-        ext = ext[1:]
-        return ext.lower() in "csp,csr,xml,js,css,xsl,xsd,txt,html".split(',')
-
     @property
     def data(self):
         if self.is_text:
@@ -152,21 +141,12 @@ class FsRepoCspItem(FsRepoItem):
         return data
 
 
-def path_matches(cfgdir:str, parts:List[str]):
+class FsRepoDataItem(RepositoryDataItem, FsRepoItem):
+    pass
+
+
+def path_matches(cfgdir:str, parts:Sequence[str]):
     # Normalize to forward slashes
     cfgdir = cfgdir.replace('\\', '/')
     cfg = cfgdir.split('/')
     return parts[0:len(cfg)] == cfg
-
-
-# ==========
-
-def main():
-    cfg = get_config()
-    repo = get_data(cfg)
-
-    for item in repo.src_items:
-        print(item.name, len(item.data))
-
-if __name__ == "__main__":
-    main()

@@ -4,25 +4,11 @@ from os.path import dirname, join, exists
 from io import BytesIO, StringIO
 from typing import Any
 
-import pytest
-import docker
-
-import requests
-from requests.exceptions import ConnectionError
-from requests.auth import HTTPBasicAuth
-
 from lxml import etree
 
+import pytest
+
 builder = import_module("build-export") # type: Any
-
-
-# Check whether docker(-compose) is available
-try:
-    client = docker.from_env()
-    NODOCKER = False
-    del client
-except docker.errors.DockerException:
-    NODOCKER = True
 
 
 # Configuration to retrieve a specific checkin of (part of) the Strix
@@ -38,20 +24,28 @@ skip = [ "*Strix.SCM.*", "*Strix.Lib*", "*Strix.Test*", "*Strix.JSON*" ]
 user = "gertjanklein"
 repo = "Strix"
 tag = "840e7413371486b74920b2b4575e10cab390b44a"
-[Server]
-host = "{host}"
-port = "{port}"
 [Local]
 outfile = 'out.xml'
+deployment = {deployment}
 """
 
+# Check for server location and credentials for UDL-XML conversion
+def get_credentials():
+    name = join(dirname(__file__), 'server.toml')
+    if not exists(name):
+        return ''
+    with open(name) as f:
+        svr = f.read()
+    return svr
+SVR = get_credentials()
 
-@pytest.mark.skipif(NODOCKER, reason="Docker not available.")
+
+@pytest.mark.skipif(SVR=='', reason="No UDL-XML conversion server configured.")
 @pytest.mark.usefixtures("reload_modules")
-def test_build(tmpdir, iris, get_build):
+def test_build(tmpdir, get_build, validate_schema):
     """Retrieve and build specific packge."""
-    host, port = iris
-    cfg = CFG.format(host=host, port=port)
+    
+    cfg = CFG.format(deployment='false') + "\n" + SVR
     export = get_build(cfg, tmpdir)
     validate_schema(export, 'irisexport.xsd')
     # Check binary equality
@@ -59,12 +53,12 @@ def test_build(tmpdir, iris, get_build):
     assert crc == 663428536
     
 
-@pytest.mark.skipif(NODOCKER, reason="Docker not available.")
+@pytest.mark.skipif(SVR=='', reason="No UDL-XML conversion server configured.")
 @pytest.mark.usefixtures("reload_modules")
-def test_build_deployment(tmpdir, iris, get_build):
+def test_build_deployment(tmpdir, get_build, validate_schema):
     """Check creating deployment."""
-    host, port = iris
-    cfg = CFG.format(host=host, port=port) + "\ndeployment = true"
+    
+    cfg = CFG.format(deployment='true') + "\n" + SVR
     export = get_build(cfg, tmpdir)
     tree = etree.parse(BytesIO(export))
     # Can't CRC file, export notes contain timestamp. Check contents.
@@ -84,46 +78,4 @@ def test_build_deployment(tmpdir, iris, get_build):
     
     validate_schema(export, 'irisexport.xsd')
     
-
-def validate_schema(export, schema_filename):
-    """Validate the export against the schema file, if it exists."""
-    
-    schema_filename = join(dirname(__file__), schema_filename)
-    if not exists(schema_filename):
-        return
-    tree = etree.parse(BytesIO(export))
-    with open(schema_filename, encoding='UTF-8') as f:
-        schema = etree.XMLSchema(etree.parse(f))
-    valid = schema.validate(tree)
-    # pylint: disable=no-member
-    assert valid, f"Export schema validation failed: {schema.error_log.last_error}"
-
-
-# =====
-
-@pytest.fixture(scope="session")
-def iris(docker_ip, docker_services):
-    """Ensure the API is up and responsive."""
-
-    # `port_for` takes a container port and returns the corresponding host port
-    port = docker_services.port_for("iris", 52773)
-    url = "http://{}:{}/api/atelier/".format(docker_ip, port)
-
-    # Helper: checks whether IRIS API is available
-    auth = HTTPBasicAuth('_SYSTEM', 'SYS')
-    def is_responsive():
-        try:
-            response = requests.get(url, auth=auth)
-            if response.status_code == 200:
-                return True
-            raise ValueError(f"Unexpected status code '{response.status_code}'.")
-        except ConnectionError:
-            return False
-        return None
-
-    docker_services.wait_until_responsive(
-        timeout=40.0, pause=1, check=is_responsive)
-    
-    return docker_ip, port
-
 

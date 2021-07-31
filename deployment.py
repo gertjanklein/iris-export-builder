@@ -41,14 +41,12 @@ DPL_NOTES_TPL = """
 """
 
 
-def append_export_notes(config, repo, root:etree.Element):
-    now = datetime.datetime.utcnow()
-    
-    # Local time, space separator between date and time
-    utc_ts = now.isoformat(sep=' ', timespec="seconds")
-    
-    now = now.replace(tzinfo=datetime.timezone.utc).astimezone(tz=None)
-    local_ts = now.isoformat(sep=' ',timespec="seconds")[:19]
+def get_deployment_items(config, repo) -> list[etree.Element]:
+
+    results = []
+
+    # Get current timestamp in UTC and local time
+    utc_ts, local_ts = get_timestamps()
 
     # Assemble a document name and minimal deployment notes
     docname = f"EnsExportProduction_{local_ts.replace(':','-')}"
@@ -60,9 +58,45 @@ def append_export_notes(config, repo, root:etree.Element):
         notes = f"""<Line num="1">Created from checkout directory '{repo.name}' at {utc_ts} UTC.</Line>"""
     machine = platform.node()
 
-    # Add names of embedded items
+    # Get names of embedded items
+    items, projectitems = get_items_xml(config, repo.src_items)
+    
+    # Add the name of the deployment to the project
+    projectitems.append(f'<ProjectItem name="EnsExportNotes.{docname}.PTD" type="PTD"></ProjectItem>')
+
+    # Create project element
+    itemstxt = '\n'.join(projectitems)
+    data = PROJECT_TPL.format(name=docname, local_ts=local_ts, utc_ts=utc_ts, source=source, items=itemstxt)
+    el = etree.fromstring(data)
+    el.tail = '\n\n'
+    results.append(el)
+    
+    # Create deployment notes element
+    itemstxt = '\n'.join(items)
+    data = DPL_NOTES_TPL.format(docname=docname, machine=machine, utc=utc_ts, notes=notes, items=itemstxt)
+    parser = etree.XMLParser(strip_cdata=False)
+    el = etree.fromstring(data, parser=parser)
+    el.tail = '\n\n'
+    results.append(el)
+
+    return results
+
+
+def get_timestamps():
+    """Returns UTC and local time in IRIS timestamp format"""
+
+    now = datetime.datetime.utcnow()
+    utc_ts = now.isoformat(sep=' ', timespec="seconds")
+    now = now.replace(tzinfo=datetime.timezone.utc).astimezone(tz=None)
+    local_ts = now.isoformat(sep=' ', timespec="seconds")[:19]
+
+    return utc_ts, local_ts
+
+
+def get_items_xml(config, repo_items:list):
+
     items, projectitems = [], []
-    for i, item in enumerate(repo.src_items):
+    for i, item in enumerate(repo_items):
         basename, itemtype = item.name.rsplit('.', 1)
         # Remove xml suffix, if present
         if config.Source.srctype == 'xml' and itemtype.lower() == 'xml':
@@ -75,22 +109,6 @@ def append_export_notes(config, repo, root:etree.Element):
             basename = f"{basename}.{itemtype}"
             itemtype = 'MAC'
         projectitems.append(f'<ProjectItem name="{basename}" type="{itemtype}"></ProjectItem>')
-    
-    # Add the name of the deployment to the project
-    projectitems.append(f'<ProjectItem name="EnsExportNotes.{docname}.PTD" type="PTD"></ProjectItem>')
+    return items, projectitems
 
-    # Create and add project to deployment
-    itemstxt = '\n'.join(projectitems)
-    data = PROJECT_TPL.format(name=docname, local_ts=local_ts, utc_ts=utc_ts, source=source, items=itemstxt)
-    el = etree.fromstring(data)
-    el.tail = '\n\n'
-    root.append(el)
-    
-    # Create and add deployment notes to deployment
-    itemstxt = '\n'.join(items)
-    data = DPL_NOTES_TPL.format(docname=docname, machine=machine, utc=utc_ts, notes=notes, items=itemstxt)
-    parser = etree.XMLParser(strip_cdata=False)
-    el = etree.fromstring(data, parser=parser)
-    el.tail = '\n\n'
-    root.append(el)
 

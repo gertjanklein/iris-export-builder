@@ -119,7 +119,14 @@ def check(config:ns.Namespace):
     ns.check_default(local, 'deployment', False)
     ns.check_default(local, 'logdir', '')
     ns.check_default(local, 'loglevel', '')
+    ns.check_default(local, 'threads', 4)
     
+    # Check data configuration
+    if src.datadir:
+        data = ns.get_section(config, 'Data', True)
+        assert data is not None # stop mypy complaints
+        ns.check_oneof(data, 'export', ('embed', 'separate', 'none'), 'embed')
+
     # Check CSP configuration
     if src.cspdir:
         csp = ns.check_section(config, 'CSP')
