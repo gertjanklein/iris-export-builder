@@ -107,7 +107,6 @@ def validate_schema():
         
         schema_filename = join(dirname(__file__), schema_file)
         if not exists(schema_filename):
-            pytest.skip("No XSD to validate against")
             return
         tree = etree.parse(BytesIO(export))
         with open(schema_filename, encoding='UTF-8') as f:
