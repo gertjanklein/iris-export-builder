@@ -185,7 +185,7 @@ def src_tree(tmp_path_factory):
     for the source tree.
     """
     # Create a base temp directory for this module
-    base = tmp_path_factory.mktemp("basic_source_tree", numbered=True) # type: Path
+    base = tmp_path_factory.mktemp("basic_source_tree", numbered=False) # type: Path
     
     # Two classes directly in the root of the source dir
     dir = base / 'src'

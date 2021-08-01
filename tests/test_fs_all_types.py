@@ -33,11 +33,11 @@ outfile = 'out.xml'
 
 
 @pytest.mark.usefixtures("reload_modules")
-def test_all_types(src_tree, get_build, validate_schema):
+def test_all_types(src_tree, tmp_path, get_build, validate_schema):
     """ Tests creating an export with src, csp, and data items. """
 
     cfg = CFG.format(path=src_tree)
-    export = get_build(cfg, src_tree)
+    export = get_build(cfg, tmp_path)
 
     tree = etree.parse(BytesIO(export))
     assert tree.docinfo.root_name == 'Export'
@@ -64,12 +64,12 @@ def test_all_types(src_tree, get_build, validate_schema):
 # -----
 
 @pytest.mark.usefixtures("reload_modules")
-def test_all_types_separate(src_tree, get_build_separate, validate_schema):
+def test_all_types_separate(src_tree, tmp_path, get_build_separate, validate_schema):
     """ Tests separate exports for source, CSP, and data """
 
     cfg = CFG.format(path=src_tree)
     cfg = cfg.replace("'embed'", "'separate'")
-    src_export, csp_export, data_export = get_build_separate(cfg, src_tree)
+    src_export, csp_export, data_export = get_build_separate(cfg, tmp_path)
 
     # === Check export of source items
 
