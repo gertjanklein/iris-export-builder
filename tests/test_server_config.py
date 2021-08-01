@@ -98,7 +98,8 @@ def test_external_relative_location(tmp_path:Path, get_config):
     with open(extdef, 'wt') as f:
         f.write(settings)
 
-    override = "[Server]\ntake_from = 'subdir\\svr.toml'"
+    relpath = extdef.relative_to(tmp_path)
+    override = f"[Server]\ntake_from = '{relpath}'"
 
     cfg = get_config(f"{CFG}\n{override}", tmp_path) # type: ns.Namespace
     assert 'Server' in cfg, "No Server section"
