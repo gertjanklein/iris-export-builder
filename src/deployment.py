@@ -118,10 +118,11 @@ def get_items_xml(name:str, root:etree.Element):
             # The actual type is then part of the name.
             name = f"{name}.{itemtype}"
             itemtype = 'MAC'
+        elif tag == 'Document':
+            name = f"{name}.{itemtype}"
         
         # Add to list of items in Studio project
         projectitems.append(f'<ProjectItem name="{name}" type="{itemtype}"></ProjectItem>')
 
     return items, projectitems
-
 
