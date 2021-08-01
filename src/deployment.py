@@ -4,6 +4,8 @@ import platform
 
 from lxml import etree
 
+import namespace as ns
+
 
 # Template for project embedded in deployment
 PROJECT_TPL = """
@@ -35,15 +37,15 @@ DPL_NOTES_TPL = """
 </Contents>
 <ProductionClassInExport></ProductionClassInExport>
 </Deployment>
-
 ]]></ProjectTextDocument>
 </Document>
 """
 
 
-def get_deployment_items(config, repo) -> list[etree.Element]:
+def add_deployment(config:ns.Namespace, name:str, root:etree.Element):
 
-    results = []
+    # Get descriptions of items for export notes and Studio project
+    items, projectitems = get_items_xml(name, root)
 
     # Get current timestamp in UTC and local time
     utc_ts, local_ts = get_timestamps()
@@ -54,13 +56,10 @@ def get_deployment_items(config, repo) -> list[etree.Element]:
         source = f"""GitHub tag '{config.GitHub.tag}'"""
         notes = f"""<Line num="1">Created from GitHub tag '{config.GitHub.tag}' at {utc_ts} UTC.</Line>"""
     else:
-        source = f"""checkout directory '{repo.name}'"""
-        notes = f"""<Line num="1">Created from checkout directory '{repo.name}' at {utc_ts} UTC.</Line>"""
+        source = f"""checkout directory '{name}'"""
+        notes = f"""<Line num="1">Created from checkout directory '{name}' at {utc_ts} UTC.</Line>"""
     machine = platform.node()
 
-    # Get names of embedded items
-    items, projectitems = get_items_xml(config, repo.src_items)
-    
     # Add the name of the deployment to the project
     projectitems.append(f'<ProjectItem name="EnsExportNotes.{docname}.PTD" type="PTD"></ProjectItem>')
 
@@ -69,7 +68,7 @@ def get_deployment_items(config, repo) -> list[etree.Element]:
     data = PROJECT_TPL.format(name=docname, local_ts=local_ts, utc_ts=utc_ts, source=source, items=itemstxt)
     el = etree.fromstring(data)
     el.tail = '\n\n'
-    results.append(el)
+    root.append(el)
     
     # Create deployment notes element
     itemstxt = '\n'.join(items)
@@ -77,9 +76,7 @@ def get_deployment_items(config, repo) -> list[etree.Element]:
     parser = etree.XMLParser(strip_cdata=False)
     el = etree.fromstring(data, parser=parser)
     el.tail = '\n\n'
-    results.append(el)
-
-    return results
+    root.append(el)
 
 
 def get_timestamps():
@@ -93,22 +90,38 @@ def get_timestamps():
     return utc_ts, local_ts
 
 
-def get_items_xml(config, repo_items:list):
+def get_items_xml(name:str, root:etree.Element):
 
     items, projectitems = [], []
-    for i, item in enumerate(repo_items):
-        basename, itemtype = item.name.rsplit('.', 1)
-        # Remove xml suffix, if present
-        if config.Source.srctype == 'xml' and itemtype.lower() == 'xml':
-            basename, itemtype = basename.rsplit('.', 1)
+    
+    for i, el in enumerate(root):
+        tag = el.tag
+        name = el.attrib['name']
+
+        if tag == 'Class':
+            itemtype = 'cls'
+        elif tag == 'Routine':
+            itemtype = el.attrib['type'] 
+        elif tag == 'Document':
+            name, itemtype = name.rsplit('.', 1)
+        else:
+            raise ValueError(f"Don't know how to handle tag '{tag}' in export.")
+        
+        # Some IRIS code expects uppercase
         itemtype = itemtype.upper()
-        items.append(f'<Item num="{i+1}">{basename}.{itemtype}</Item>')
+
+        # Add to list of items in export notes
+        items.append(f'<Item num="{i+1}">{name}.{itemtype}</Item>')
+
         if itemtype in ('INC', 'INT'):
             # For Studio projects, the item type of include files etc is MAC.
             # The actual type is then part of the name.
-            basename = f"{basename}.{itemtype}"
+            name = f"{name}.{itemtype}"
             itemtype = 'MAC'
-        projectitems.append(f'<ProjectItem name="{basename}" type="{itemtype}"></ProjectItem>')
+        
+        # Add to list of items in Studio project
+        projectitems.append(f'<ProjectItem name="{name}" type="{itemtype}"></ProjectItem>')
+
     return items, projectitems
 
 

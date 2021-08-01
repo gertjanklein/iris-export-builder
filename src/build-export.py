@@ -6,7 +6,7 @@ from config import get_config, ConfigurationError, msgbox
 from split_export import get_files, ExportFile
 from repo import RepositorySourceItem
 from convert import setup_session, cleanup, convert
-from deployment import get_deployment_items
+from deployment import add_deployment
 
 
 def main():
@@ -34,7 +34,11 @@ def run(config):
     # Append export notes to make export usable as a deployment 
     if config.Local.deployment:
         export = files[0]
-        export.deployment.extend(get_deployment_items(config, repo))
+        # Create the export element
+        export.create_export()
+        # Add elements with deployment information
+        logging.info('Adding deployment items')
+        add_deployment(config, repo.name, export.root)
     
     # Export each 1..n files in turn:
     for export_file in files:

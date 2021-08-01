@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import Sequence
+from typing import Sequence, Optional
 
 import os
 from os.path import dirname, join, isabs, exists, splitext, basename
@@ -24,14 +24,14 @@ class ExportFile:
     # The items (in their 'repo' representation)
     items:Sequence[RepositoryItem]
 
-    # Additional XML items for deployment
-    deployment:list
+    # The root element of the export to create
+    root:Optional[etree.Element]
 
     
     def __init__(self, filename, items=None):
         self.filename = filename
         self.items = items or []
-        self.deployment = []
+        self.root = None
 
 
     def write(self):
@@ -48,11 +48,12 @@ class ExportFile:
     def get_export_data(self) -> bytes:
         """Create and return export as bytes"""
 
-        # Create export as lxml tree
-        root = self.create_export()
+        # Create export as lxml tree, if not already done
+        if not self.root:
+            self.create_export()
 
         # Convert to bytes
-        et = etree.ElementTree(root)
+        et = etree.ElementTree(self.root)
         export = BytesIO()
         et.write(export, xml_declaration=True, encoding="UTF-8")
 
@@ -68,7 +69,7 @@ class ExportFile:
         """Create the export from the items in this object."""
         
         # Create root element for export
-        root = etree.Element('Export')
+        self.root = root = etree.Element('Export')
         root.text = '\n'
         root.tail = '\n'
 
@@ -104,33 +105,26 @@ class ExportFile:
                 el.tail = '\n\n'
                 root.append(el)
         
-        # Append elements created for deployment, if any
-        if self.deployment:
-            logging.info('Adding deployment items')
-            for el in self.deployment:
-                root.append(el)
-        
+        # Set version and generator attributes
         ver = maxver or minver or 25
         root.attrib['generator'] = 'IRIS' if ver > 25 else 'Cache'
         root.attrib['version'] = str(ver)
 
-        return root
 
-
-    def remove_timestamps(self, export:etree.Element):
+    def remove_timestamps(self, item_root:etree.Element):
         """Remove timestamp elements for classes in export."""
 
-        tree = etree.ElementTree(export)
+        tree = etree.ElementTree(item_root)
         for el in tree.xpath("/Export/Class/TimeChanged"):
             el.getparent().remove(el)
         for el in tree.xpath("/Export/Class/TimeCreated"):
             el.getparent().remove(el)
 
 
-    def update_timestamp(self, export:etree.Element, horolog):
+    def update_timestamp(self, item_root:etree.Element, horolog):
         """Set timestamps for classes in export to modified time."""
 
-        for el in export:
+        for el in item_root:
             if el.tag != "Class":
                 continue
             for subel in el:
