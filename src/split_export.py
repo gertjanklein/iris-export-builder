@@ -49,7 +49,7 @@ class ExportFile:
         """Create and return export as bytes"""
 
         # Create export as lxml tree, if not already done
-        if not self.root:
+        if self.root is None:
             self.create_export()
 
         # Convert to bytes
