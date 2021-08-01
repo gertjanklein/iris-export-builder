@@ -118,6 +118,10 @@ path = ''
 ##### Server connection details: the server to use to convert UDL to XML.
 [Server]
 
+# Filename to take the settings from. Merges with (and overrides) settings
+# defined here. Does not need, but may use, [Server] section header.
+#take_from = 'server.toml'
+
 # Hostname or IP address
 host = ""
 # Caché/IRIS internal web server port
