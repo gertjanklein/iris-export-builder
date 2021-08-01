@@ -129,22 +129,10 @@ def check(config:ns.Namespace):
 
     # Check CSP configuration
     if src.cspdir:
-        csp = ns.check_section(config, 'CSP')
-        ns.check_oneof(csp, 'export', ('embed', 'separate', 'none'), 'embed')
-        if not csp.export == 'none':
-            # Only check these if we are to export CSP files
-            if ns.check_default(csp, 'parsers', []):
-                raise ConfigurationError("At least one [[CSP.parsers]] section for CSP items should be present.")
-            for i, parser in enumerate(csp.parsers):
-                if not isinstance(parser, ns.Namespace):
-                    raise ConfigurationError(f'Parser {i+1} must be a section.')
-                ns.check_notempty(parser, 'regex')
-                ns.check_notempty(parser, 'app')
-                ns.check_notempty(parser, 'item')
-                ns.check_oneof(parser, 'nomatch', ('skip', 'error'), 'error')
-        
+        check_csp(config)
+    
         # CSP items appear unsupported in deployments, so must be exported separately
-        if local.deployment and csp.export == 'embed':
+        if local.deployment and config.CSP.export == 'embed':
             raise ConfigurationError("When requesting a deployment, CSP export must be 'separate'.")
     
     # Check optional sections
@@ -164,19 +152,67 @@ def check(config:ns.Namespace):
         ns.check_notempty(gh, 'tag')
         ns.check_default(config.GitHub, 'token', '')
 
+    # Check server configuration
     if src.srctype == 'udl':
-        # Server needed for conversion to XML
-        svr = ns.get_section(config, 'Server')
-        if svr is None:
-            svr = config.Server = ns.Namespace()
-        ns.check_default(svr, 'host', 'localhost')
-        ns.check_default(svr, 'port', '52773')
-        ns.check_default(svr, 'user', 'SuperUser')
-        ns.check_default(svr, 'password', 'SYS')
-        ns.check_default(svr, 'namespace', 'USER')
-        ns.check_default(svr, 'https', False)
+        check_server(config)
         
 
+def check_server(config):
+    """ Check UDL -> XML server configuration """
+    
+    # Make sure a section is present; it may not be, as every
+    # setting here has a default.
+    svr = ns.get_section(config, 'Server')
+    if svr is None:
+        svr = config.Server = ns.Namespace()
+    
+    # Make sure default values are present
+    ns.check_default(svr, 'host', 'localhost')
+    ns.check_default(svr, 'port', '52773')
+    ns.check_default(svr, 'user', 'SuperUser')
+    ns.check_default(svr, 'password', 'SYS')
+    ns.check_default(svr, 'namespace', 'USER')
+    ns.check_default(svr, 'https', False)
+
+    # Is an external definition file specified?
+    if not (take_from := svr._get('take_from')):
+        return
+    
+    # Make file path absolute, if not already so
+    if not isabs(take_from):
+        take_from = join(config.cfgdir, take_from)
+    
+    # Load the server specification from the file
+    ext_svr = ns.dict2ns(toml.load(take_from))
+
+    # Allow, but don't require, a [Server] section header
+    if 'Server' in ext_svr and isinstance(ext_svr.Server, ns.Namespace):
+        ext_svr = ext_svr.Server
+
+    # Overwrite default settings with what's in the external file
+    for prop in 'host,port,user,password,namespace,https'.split(','):
+        if not prop in ext_svr:
+            continue
+        svr[prop] = ext_svr[prop]
+        
+
+def check_csp(config:ns.Namespace):
+    """ Checks the CSP configuration """
+
+    csp = ns.check_section(config, 'CSP')
+    ns.check_oneof(csp, 'export', ('embed', 'separate', 'none'), 'embed')
+    if not csp.export == 'none':
+        # Only check these if we are to export CSP files
+        if ns.check_default(csp, 'parsers', []):
+            raise ConfigurationError("At least one [[CSP.parsers]] section for CSP items should be present.")
+        for i, parser in enumerate(csp.parsers):
+            if not isinstance(parser, ns.Namespace):
+                raise ConfigurationError(f'Parser {i+1} must be a section.')
+            ns.check_notempty(parser, 'regex')
+            ns.check_notempty(parser, 'app')
+            ns.check_notempty(parser, 'item')
+            ns.check_oneof(parser, 'nomatch', ('skip', 'error'), 'error')
+    
 # ==========
 
 def setup_basic_logging(cfgfile):

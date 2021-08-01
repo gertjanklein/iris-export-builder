@@ -27,6 +27,24 @@ def reload_modules():
 
 
 @pytest.fixture
+def get_config():
+    def get_config(toml:str, tmp_path:Path):
+        """ Returns a namespace for a TOML in a string """
+
+        cfgfile = str(tmp_path / 'cfg.toml')
+        with open(cfgfile, 'wt') as f:
+            f.write(toml)
+        
+        args = ['builder', cfgfile, '--no-gui']
+        with patch('sys.argv', args):
+            cfg = config.get_config()
+        
+        return cfg
+
+    return get_config
+
+
+@pytest.fixture
 def get_build():
     def get_build(toml:str, tmp_path):
         """Retrieves a build using the toml config passed in."""
