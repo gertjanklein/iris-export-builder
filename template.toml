@@ -5,31 +5,23 @@
 ##### Details about the source files
 [Source]
 
-# The type of location:
-# "directory": a filesystem directory, configured under [Directory]
-# "github": a github tag, configured under [GitHub]
-type = "github"
+# The type of location: 'directory' or 'github'
+type = 'github'
 
-# The encoding of the source files; use valid Python encoding string,
-# e.g. UTF-8 or CP1252. For a list of possible values, see
-# https://docs.python.org/3.7/library/codecs.html#standard-encodings
-# Default is UTF-8.
-encoding = "UTF-8"
+# The encoding of the source files, e.g. UTF-8 (default) or CP1252.
+encoding = 'UTF-8'
 
-# The type of source code export: "xml" or "udl" (default).
-srctype = "udl"
+# The type of source code export: 'xml' or 'udl' (default).
+srctype = 'udl'
 
-# Directory, relative to the repository root, to search for source
-# files to include.
+# Directory, relative to the sources root, of the source files.
 srcdir = 'src'
 
 # Directory to search for CSP files, if any.
 cspdir = 'csp'
 
-# Directory to search for data files to include, e.g. lookup tables, system
-# default settings, etc. Data files are expected to be in XML export format
-# already, as created by $System.OBJ.Export().
-datadir = ''
+# Directory to search for data files to include, if any.
+datadir = 'data'
 
 # List of items to skip when building the export. Supports *-style wildcards.
 # The items are matched against their full path from the root of the repository.
@@ -40,33 +32,11 @@ skip = [
 # Details on what to do with CSP items
 [CSP]
 
-# How to handle the CSP export:
-# - embed: CSP items are added to the export file. This is the default.
-# - separate: a separate export file will be created for CSP items. The
-#     name of the file will be the export name with _csp appended.
-# - none: do not export CSP items
+# How to handle the CSP export: 'embed', 'separate' or 'none'.
 export = 'embed'
 
 
-# One or more parsers for CSP items. The parsers use a regular expression
-# to determine which part of a CSP path is the application, and which part
-# the actual item. This is needed as an XML export item makes this
-# distinction. Note that replacements can be hardcoded if needed.
-# The default parser below assumes the first path component is the application,
-# unless that is 'csp', in which case the first two components are used.
-# Capture groups (surrounded by parenthesis) can be referred to in the
-# replacement strings, using "\<group nr>". In the default parser below, the
-# first group is used as application name, and the third one as item name.
-# (The second one captures the the optional '/csp' part of the application name.
-# It can be either '/csp' or empty, and is not used here.)
-# Note the double brackets around the section name: they denote that
-# more than one of these sections can be present.
-# In most cases, is a single dedicated application is used, a simple
-# configuration would be (assuming the application is called 'app'):
-#   regex = '/app/(.+)'
-#   app = '/app'
-#   item = '\1'
-# If more than one parser is present, the first match (if any) is used.
+# One or more parsers for CSP items.
 [[CSP.parsers]]
 
 # The regular expression to use to match application and item.
@@ -75,20 +45,14 @@ regex = '((/csp)?/[^/]+)/(.+)'
 app = '\1'
 # The item part can also use capture groups
 item = '\3'
-# What to do if a CSP item does not match this item:
-# - error: raise a configuration error (details will be logged)
-# - skip: just skip this item, and try the next parser (if any).
+# If an item does not match: 'error' or 'skip'
 nomatch = 'error'
 
 
 ##### Data items
 [Data]
 
-# How to handle the data export:
-# - embed: data items are added to the export file. This is the default.
-# - separate: a separate export file will be created for data items. The
-#     name of the file will be the export name with _data appended.
-# - none: do not export data items
+# How to handle the data export: 'embed', 'separate', or 'none'
 export = 'embed'
 
 
@@ -96,14 +60,13 @@ export = 'embed'
 [GitHub]
 
 # GitHub username (repo owner) and repository
-user = ""
-repo = ""
+user = ''
+repo = ''
 
-# What to create an export for. Anything for which GitHub can create a
-# zip, e.g. release tags, branch names, commit ids (sha), etc.
-tag = "master"
+# Tag/branch/commit id  to create an export for.
+tag = 'master'
 
-# GitHub security token to use (only needed for private repositories).
+# GitHub security token to use, if needed.
 # Prefix with @ to specify a file containing the token.
 token = ''
 
@@ -122,17 +85,17 @@ path = ''
 # defined here. Does not need, but may use, [Server] section header.
 #take_from = 'server.toml'
 
-# Hostname or IP address
-host = ""
-# Caché/IRIS internal web server port
-port = ""
-# Namespace to use (any namespace will do)
-namespace = "USER"
-# Credentials; will be used in a basic auth header
-user = ""
-password = ''
-# Whether to connect with HTTPS; should normally be off
-https = false
+# Hostname or IP address, default 'localhost'
+#host = ''
+# Caché/IRIS internal web server port, default '52773'
+#port = ''
+# Namespace to use (default 'USER')
+#namespace = ''
+# Credentials; default 'SuperUser'/'SYS'
+#user = ''
+#password = ''
+# Whether to connect with HTTPS (default false)
+#https = false
 
 
 ##### Details about the export to build and logging
@@ -144,14 +107,10 @@ https = false
 # {timestamp}: Current date/time in format YYYY-MM-DDThh-mm
 outfile = '{name}.xml'
 
-# Whether to create an Ensemble deployment file. If not, a standard
-# IRIS export file will be created. (Support for deployments is minimal,
-# check the documentation.)
+# Whether to create an Ensemble deployment file.
 deployment = false
 
-# Directory for the log file. If empty, the log file is placed adjacent to
-# the configuration file. It will always have the name of the config file,
-# with ".toml" replaced with ".log".
+# Directory for the log file.
 logdir = ''
 
 # Logging level. One of 'debug', 'info', 'warning', 'error', or 'critical'.
