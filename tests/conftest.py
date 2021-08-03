@@ -9,10 +9,14 @@ from pathlib import Path
 from typing import Any
 
 from lxml import etree
+import requests
+from requests.exceptions import RequestException
+
 import pytest
 
 import config
 builder = import_module("build-export") # type: Any
+
 
 
 @pytest.fixture(scope="function")
@@ -136,7 +140,66 @@ def validate_schema():
     return validate_schema
 
 
-# =====
+# ===== UDL -> XML convertor in docker
+
+def _open_local():
+    """ Returns the contents of server.toml, if present """
+
+    name = join(dirname(__file__), 'server.toml')
+    if not exists(name):
+        return None
+    with open(name) as f:
+        return f.read()
+
+if _toml := _open_local():
+    @pytest.fixture(scope="session")
+    def server_toml():
+        global _toml
+        return _toml
+
+else:
+    @pytest.fixture(scope="session")
+    def server_toml(iris_service):
+        ip, port = iris_service
+        toml = f"[Server]\nhost='{ip}'\nport='{port}'\n" \
+            "username='_SYSTEM'\npassword='SYS'\n"
+        return toml
+
+
+@pytest.fixture(scope="session")
+def iris_service(docker_ip, docker_services):
+    """Ensure that HTTP service is up and responsive."""
+
+    port = docker_services.port_for("iris_udl_to_xml", 52773)
+    url = "http://{}:{}/api/atelier/".format(docker_ip, port)
+    docker_services.wait_until_responsive(
+        timeout=120.0, pause=0.5, check=lambda: is_responsive(url)
+    )
+
+    return docker_ip, port
+
+
+def is_responsive(url):
+    """ Helper method, waits until an http URL is available """
+
+    try:
+        response = requests.get(url, auth=('_SYSTEM','SYS'), timeout=1)
+        if response.status_code == 200:
+            return True
+    except RequestException:
+        pass
+    
+    return False
+
+
+@pytest.fixture(scope="session")
+def docker_compose_file(pytestconfig):
+    """ Override to specify where docker-compose.yml is """
+    
+    return join(pytestconfig.rootdir, "docker", "docker-compose.yml")
+
+
+# ===== Create a source file tree for testing
 
 # Class export template (XML)
 CLS_TPL = """\

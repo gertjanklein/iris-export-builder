@@ -64,7 +64,7 @@ def convert_udl(config, exports:list[ExportFile]):
             if not item.is_udl:
                 continue
             to_convert.append(item)
-    convert(config, to_convert, 4)
+    convert(config, to_convert, config.Local.threads)
 
 
 def get_repo(config):
