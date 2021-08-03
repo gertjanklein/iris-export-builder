@@ -1,7 +1,7 @@
 version: '3.6'
 services:
-  iris:
+  iris_udl_to_xml:
     build:
       context: .
     ports:
-      - "52773:52773"
+      - 12000-12500:52773
