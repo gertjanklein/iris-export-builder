@@ -245,7 +245,7 @@ def setup_logging(config):
     if ext.lower() == '.toml':
         logfile = f'{base}.log'
     else:
-        logfile = f'{base}.{ext}.log'
+        logfile = f'{base}{ext}.log'
 
     # Determine filename (with path)
     name = join(logdir, logfile)
@@ -361,7 +361,7 @@ def parse_args():
         cfgfile = join(dirname(__file__), cfgfile)
     
     if not exists(cfgfile) or not isfile(cfgfile):
-        msgbox(f"Error: file {cfgfile} not found.\n\n{parser.format_help()}", True)
+        msgbox(f"Error: file {args.config} not found.\n\n{parser.format_help()}", True)
         sys.exit(1)
     
     if not isabs(cfgfile):
