@@ -51,6 +51,7 @@ def test_all_types(src_tree, tmp_path, get_build, validate_schema):
     assert tree.find('/CSP[@name="hello.csp"]') is not None, "hello.csp not in export"
     assert tree.find('/CSP[@name="goodbye.csp"]') is not None, "goodbye.csp not in export"
     assert tree.find('/CSPBase64[@name="binary.bin"]') is not None, "binary.bin not in export"
+    assert tree.find('/CSPBase64[@name="dat"]') is not None, "dat not in export or not binary"
     
     assert tree.find('/Document[@name="Test.LUT"]') is not None, "Test.LUT not in export"
     assert tree.find('/Document[@name="Test.LUT"]/lookupTable/entry[@table="Test"]') is not None, "Test entry of lookup table not in export"

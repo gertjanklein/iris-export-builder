@@ -239,6 +239,10 @@ def src_tree(tmp_path_factory):
     file = dir / "binary.bin"
     file.write_text('abc')
 
+    # A typeless CSP file, should be interpreted as binary
+    file = dir / "dat"
+    file.write_text('abc')
+
     # Data dir
     dir = base / 'data'
     dir.mkdir(parents=True)
