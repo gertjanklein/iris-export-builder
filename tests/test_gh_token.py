@@ -5,6 +5,7 @@ from pathlib import Path
 
 import pytest
 
+from config import ConfigurationError
 import namespace as ns
 
 
@@ -64,4 +65,30 @@ def test_token_external_with_nl(tmp_path:Path, get_config):
     gh = config.GitHub
     assert isinstance(gh, ns.Namespace), "GitHub not a section"
     assert gh.token == 'ghi', f"Token has unexpected value: '{gh.token}'"
+
+
+@pytest.mark.usefixtures("reload_modules")
+def test_token_relative(tmp_path:Path, get_config):
+    """ Tests token from external file, relative path """
+
+    ext = tmp_path / 'token.txt'
+    with open(ext, 'wt') as f:
+        f.write('jkl\n')
+
+    cfg = CFG.format(token="@token.txt")
+    config = get_config(cfg, tmp_path) # type: ns.Namespace
+    assert 'GitHub' in config, "No Server section"
+    gh = config.GitHub
+    assert isinstance(gh, ns.Namespace), "GitHub not a section"
+    assert gh.token == 'jkl', f"Token has unexpected value: '{gh.token}'"
+
+
+@pytest.mark.usefixtures("reload_modules")
+def test_tokenfile_missing(tmp_path:Path, get_config):
+    """ Tests token from external file, relative path """
+
+    cfg = CFG.format(token="@missing.txt")
+    with pytest.raises(ConfigurationError) as e:
+        config = get_config(cfg, tmp_path) # type: ns.Namespace
+    assert e.value.args[0].startswith("Error reading token file")
 
