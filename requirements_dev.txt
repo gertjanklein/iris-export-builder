@@ -5,6 +5,7 @@ requests
 pylint
 pytest
 pytest-docker
+pytest-cov
 mypy
 types-requests
 types-toml
