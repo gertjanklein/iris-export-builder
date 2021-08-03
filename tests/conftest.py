@@ -216,7 +216,12 @@ def src_tree(tmp_path_factory):
     dir = base / 'src' / 'c'
     dir.mkdir(parents=True)
     file = dir / "cc.cls.xml"
-    file.write_text(CLS_TPL.format(name="tmp.c.cc"), encoding='UTF-8')
+    contents = CLS_TPL.format(name="tmp.c.cc")
+    timestamps = '<TimeCreated>65958,79762.139</TimeCreated>\n' \
+        '<TimeChanged>65958,79762.139</TimeChanged>\n'
+    idx = contents.find('<Desc')
+    contents = contents[:idx] + timestamps + contents[idx:]
+    file.write_text(contents, encoding='UTF-8')
     
     # An include file
     dir = base / 'src'

@@ -11,12 +11,16 @@ import logging
 
 from lxml import etree
 
+import namespace as ns
 from config import ConfigurationError
 from repo import RepositoryItem, RepositoryCspItem
 
 
 class ExportFile:
     """Represents a file with items to export"""
+
+    # The configuration object
+    config:ns.Namespace
 
     # The filename to export to
     filename:str
@@ -28,7 +32,8 @@ class ExportFile:
     root:Optional[etree.Element]
 
     
-    def __init__(self, filename, items=None):
+    def __init__(self, config, filename, items=None):
+        self.config = config
         self.filename = filename
         self.items = items or []
         self.root = None
@@ -76,6 +81,13 @@ class ExportFile:
         minver = maxver = 0
         parser = etree.XMLParser(strip_cdata=False)
 
+        # How to handle timestamps ('clear', 'update', 'leave')
+        timestamps = self.config.Local.timestamps
+        # If we get data from GitHub, we get nonsense timestamps and
+        # have no better info, so clear them regardless of setting
+        if self.config.Source.srctype == 'udl' and self.config.Source.type == 'github':
+            timestamps = 'clear'
+
         for item in self.items:
             # Get the lxml element for this item
             item_root = item.get_xml_element()
@@ -96,10 +108,13 @@ class ExportFile:
                 if version > maxver: maxver = version
 
             # Handle item timestamps
-            if ts := item.horolog:
-                self.update_timestamp(item_root, ts)
-            else:
+            if timestamps == 'clear':
                 self.remove_timestamps(item_root)
+            elif timestamps == 'update':
+                if ts := item.horolog:
+                    self.update_timestamp(item_root, ts)
+                else:
+                    self.remove_timestamps(item_root)
             
             for el in item_root:
                 el.tail = '\n\n'
@@ -127,9 +142,13 @@ class ExportFile:
         for el in item_root:
             if el.tag != "Class":
                 continue
-            for subel in el:
-                if subel.tag not in ("TimeChanged", "TimeCreated"):
-                    continue
+            for tag in ("TimeChanged", "TimeCreated"):
+                subel = el.find(tag)
+                if subel is None:
+                    # Add the element at the first position of the parent
+                    subel = etree.Element(tag)
+                    subel.tail = '\n'
+                    el.insert(0, subel)
                 subel.text = horolog
 
 
@@ -139,7 +158,7 @@ def get_files(config, repo):
 
     export_files = []
     main_name = get_export_name(config, repo.name)
-    main_export = ExportFile(main_name)
+    main_export = ExportFile(config, main_name)
     export_files.append(main_export)
 
     # Export of code items
@@ -154,7 +173,7 @@ def get_files(config, repo):
         else:
             name, ext = splitext(main_name)
             name = f'{name}_data{ext}'
-            data_export = ExportFile(name, repo.data_items)
+            data_export = ExportFile(config, name, repo.data_items)
             export_files.append(data_export)
     
     # Export of CSP items
@@ -164,7 +183,7 @@ def get_files(config, repo):
         else:
             name, ext = splitext(main_name)
             name = f'{name}_csp{ext}'
-            csp_export = ExportFile(name)
+            csp_export = ExportFile(config, name)
             export_files.append(csp_export)
 
         for item in repo.csp_items:

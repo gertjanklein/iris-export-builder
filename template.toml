@@ -116,3 +116,6 @@ logdir = ''
 # Logging level. One of 'debug', 'info', 'warning', 'error', or 'critical'.
 loglevel = 'info'
 
+# Timestamp handling. One of 'clear', 'update', or 'leave' (default).
+timestamps = 'leave'
+

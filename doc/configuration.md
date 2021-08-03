@@ -248,3 +248,17 @@ where to log.
 * **loglevel**: the level of logging. Possible values are `'debug'`,
   `'info'`, `'warning'`, `'error'`, and `'critical'`. Note that most
   logging is done as `'info'` or `'debug'`.
+
+* **timestamps**: how to handle timestamps (TimeCreated and TimeChanged
+  elements) in classes. XML sources may or may not have them. Sources on
+  the filesystem can use the file timestamp to set these properties.
+  Possible values are:
+
+  * `'clear'`: remove timestamp elements from class exports, if present.
+  * `'update'`: if timestamp information can be determined, as on a
+    local filesystem, add or update the elements, otherwise remove them.
+  * `'leave'`: don't add or remove timestamps, leave them as they are.
+    This is the default.
+  
+  UDL sources from GitHub don't have timestamps, but they get one from
+  the UDL to XML conversion. These are always stripped.
