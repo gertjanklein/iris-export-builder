@@ -1,6 +1,5 @@
 from importlib import import_module
 import binascii
-from os.path import dirname, join, exists
 from io import BytesIO, StringIO
 from typing import Any
 
@@ -29,23 +28,14 @@ outfile = 'out.xml'
 deployment = {deployment}
 """
 
-# Check for server location and credentials for UDL-XML conversion
-def get_credentials():
-    name = join(dirname(__file__), 'server.toml')
-    if not exists(name):
-        return ''
-    with open(name) as f:
-        svr = f.read()
-    return svr
-SVR = get_credentials()
-
-
-@pytest.mark.skipif(SVR=='', reason="No UDL-XML conversion server configured.")
 @pytest.mark.usefixtures("reload_modules")
-def test_build(tmpdir, get_build, validate_schema):
+def test_build(tmpdir, server_toml, get_build, validate_schema):
     """Retrieve and build specific packge."""
     
-    cfg = CFG.format(deployment='false') + "\n" + SVR
+    if not server_toml:
+        pytest.skip("No XML -> UDL server found.")
+    
+    cfg = CFG.format(deployment='false') + "\n" + server_toml
     export = get_build(cfg, tmpdir)
     validate_schema(export, 'irisexport.xsd')
     # Check binary equality
@@ -53,12 +43,14 @@ def test_build(tmpdir, get_build, validate_schema):
     assert crc == 663428536
     
 
-@pytest.mark.skipif(SVR=='', reason="No UDL-XML conversion server configured.")
 @pytest.mark.usefixtures("reload_modules")
-def test_build_deployment(tmpdir, get_build, validate_schema):
+def test_build_deployment(tmpdir, server_toml, get_build, validate_schema):
     """Check creating deployment."""
     
-    cfg = CFG.format(deployment='true') + "\n" + SVR
+    if not server_toml:
+        pytest.skip("No XML -> UDL server found.")
+    
+    cfg = CFG.format(deployment='true') + "\n" + server_toml
     export = get_build(cfg, tmpdir)
     tree = etree.parse(BytesIO(export))
     # Can't CRC file, export notes contain timestamp. Check contents.
