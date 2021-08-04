@@ -13,6 +13,7 @@ import requests
 from requests.exceptions import RequestException
 
 import pytest
+import docker
 
 import config
 builder = import_module("build-export") # type: Any
@@ -151,13 +152,30 @@ def _open_local():
     with open(name) as f:
         return f.read()
 
-if _toml := _open_local():
+def docker_available():
+    """ Checks whether Docker is available """
+
+    try:
+        client = docker.from_env()
+        return True
+    except docker.errors.DockerException:
+        return False
+
+
+if _server_toml := _open_local():
+    # A local toml server definition is available; use that
     @pytest.fixture(scope="session")
     def server_toml():
-        global _toml
-        return _toml
+        return _server_toml
+
+elif not docker_available():
+    # Docker unavailable; return None to indicate no server available
+    @pytest.fixture(scope="session")
+    def server_toml():
+        return None
 
 else:
+    # Docker available; spin up a temporary IRIS
     @pytest.fixture(scope="session")
     def server_toml(iris_service):
         ip, port = iris_service
