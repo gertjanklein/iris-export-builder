@@ -161,14 +161,16 @@ def check_oneof(section:Namespace, name:str, oneof:Iterable, default=None):
         section[name] = default
         return
     if value in oneof: return
-    raise ConfigurationError(f"Configuration error: {section._name}:{name} must be one of {str(oneof)}")
+    disp_name = f'{section._name}:{name}' if '_name' in section else name
+    raise ConfigurationError(f"Configuration error: {disp_name} must be one of {str(oneof)}")
 
 def check_notempty(section:Namespace, name:str):
     """Raises if value not supplied or empty."""
 
     value = section._get(name)
     if value: return
-    raise ConfigurationError(f"Configuration error: {section._name}:{name} must be present and non-empty")
+    disp_name = f'{section._name}:{name}' if '_name' in section else name
+    raise ConfigurationError(f"Configuration error: {disp_name} must be present and non-empty")
 
 def check_encoding(section:Namespace, name:str, default):
     """Raises if specified encoding is unknown."""
@@ -178,5 +180,6 @@ def check_encoding(section:Namespace, name:str, default):
     try:
         codecs.lookup(encoding)
     except LookupError:
-        msg = f"Configuration error: {section._name}:{name}: '{encoding}' is an unrecognised encoding"
+        disp_name = f'{section._name}:{name}' if '_name' in section else name
+        msg = f"Configuration error: {disp_name}: '{encoding}' is an unrecognised encoding"
         raise ConfigurationError(msg) from None
