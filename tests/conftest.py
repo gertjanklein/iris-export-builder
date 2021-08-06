@@ -324,6 +324,13 @@ def src_tree(tmp_path_factory):
     file = dir / "dat"
     file.write_text('abc')
 
+    # Two more CSP files in a different application
+    dir = base / 'csp' / 'app2'
+    dir.mkdir(parents=True)
+    for name in 'hello2', 'goodbye2':
+        file = dir / f"{name}.csp"
+        file.write_text(CSP_TPL.format(name=name), encoding='UTF-8')
+
     # Data dir
     dir = base / 'data'
     dir.mkdir(parents=True)
