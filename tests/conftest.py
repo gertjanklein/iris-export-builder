@@ -69,11 +69,6 @@ def get_build():
         with open(outfile, 'rb') as bf:
             export = bf.read()
 
-        # Cleanup: log handler still has log file open
-        for h in logging.getLogger().handlers:
-            h.close()
-        logging.getLogger().handlers.clear()
-
         return export
     return get_build
 
