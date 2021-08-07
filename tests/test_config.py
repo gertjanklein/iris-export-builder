@@ -1,6 +1,7 @@
 """ Tests configuration file handling.
 """
 
+import os
 from unittest.mock import patch
 
 import pytest
@@ -124,7 +125,8 @@ def test_usage_msg():
     flag to msgbox should be set, and the exit code should be 2 (this is
     determined by argparse).
     """
- 
+    
+    # Run without arguments
     args = ['builder']
     seen = False
     
@@ -136,7 +138,6 @@ def test_usage_msg():
         assert msg.startswith("usage: builder"), f"Unexpected or missing usage message: {msg}"
         assert is_error, "Error mode for msgbox not set."
 
-    # Pass a missing config file name to the configuration parser
     with patch('sys.argv', args), patch('config.msgbox', msgbox):
         with pytest.raises(SystemExit) as e:
             cfg = config.get_config()
@@ -145,6 +146,35 @@ def test_usage_msg():
         assert seen, "msgbox not called"
     
 
+@pytest.mark.skipif(os.name != 'nt', reason="Not on Windows")
+@pytest.mark.usefixtures("reload_modules")
+def test_windows_MessageBoxW_error():
+    """ Tests that a usage message is displayed when no arguments supplied
+
+    This directly tests the call to the Windows MessageBoxW API.
+    """
+ 
+    # Run without arguments
+    args = ['builder']
+    seen = False
+    
+    # Replacement for Windows MessageBoxW
+    def msgbox(handle, text, caption, flags): # pylint: disable=unused-argument
+        nonlocal seen
+        seen = True
+        msg = text.split('\n', maxsplit=1)[0]
+        assert msg.startswith("usage: builder"), f"Unexpected or missing usage message: {msg}"
+        # Warning icon
+        assert flags == 0x30, f"Unexpected flags {flags}."
+
+    with patch('sys.argv', args), patch('ctypes.windll.user32.MessageBoxW', msgbox):
+        with pytest.raises(SystemExit) as e:
+            cfg = config.get_config()
+        code = e.value.args[0]
+        assert code == 2, f"Exit code not 2 but {code}"
+        assert seen, "msgbox not called"
+
+
 @pytest.mark.usefixtures("reload_modules")
 def test_help_msg():
     """ Tests that a help message is displayed with argument --help
@@ -152,7 +182,8 @@ def test_help_msg():
     This situation is not an error, so the error flag to msgbox should
     not be set, and the exit code should be 0.
     """
- 
+    
+    # Run with --help argument
     args = ['builder', '--help']
     seen = False
     
@@ -164,7 +195,6 @@ def test_help_msg():
         assert msg.startswith("usage: builder"), f"Unexpected or missing usage message: {msg}"
         assert not is_error, "Error mode for msgbox set."
 
-    # Pass a missing config file name to the configuration parser
     with patch('sys.argv', args), patch('config.msgbox', msgbox):
         with pytest.raises(SystemExit) as e:
             cfg = config.get_config()
@@ -172,3 +202,34 @@ def test_help_msg():
         assert code == 0, f"Exit code not 0 but {code}"
         assert seen, "msgbox not called"
     
+
+
+@pytest.mark.skipif(os.name != 'nt', reason="Not on Windows")
+@pytest.mark.usefixtures("reload_modules")
+def test_windows_MessageBoxW_info():
+    """ Tests that a help message is displayed with argument --help
+
+    This directly tests the call to the Windows MessageBoxW API.
+    """
+ 
+    args = ['builder', '--help']
+    seen = False
+    
+    # Replacement for Windows MessageBoxW
+    def msgbox(handle, text, caption, flags): # pylint: disable=unused-argument
+        nonlocal seen
+        seen = True
+        msg = text.split('\n', maxsplit=1)[0]
+        assert msg.startswith("usage: builder"), f"Unexpected or missing usage message: {msg}"
+        assert flags == 0, f"Unexpected flags {flags}."
+
+    with patch('sys.argv', args), patch('ctypes.windll.user32.MessageBoxW', msgbox):
+        with pytest.raises(SystemExit) as e:
+            cfg = config.get_config()
+        code = e.value.args[0]
+        assert code == 0, f"Exit code not 0 but {code}"
+        assert seen, "msgbox not called"
+
+
+
+
