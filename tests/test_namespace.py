@@ -130,7 +130,7 @@ def test_check_missing_attribute():
     """
 
     cfg = ns.Namespace()
-    with pytest.raises(KeyError) as e:
+    with pytest.raises(AttributeError) as e:
         value = cfg.value
     assert e.value.args[0] == 'value', f"Unexpected error attribute: {e.value.args[0]}"
 

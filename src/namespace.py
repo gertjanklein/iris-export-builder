@@ -29,7 +29,10 @@ class Namespace(SimpleNamespace):
         try:
             return object.__getattribute__(self, name)
         except AttributeError:
-            return self.__dict__[name]
+            try:
+                return self.__dict__[name]
+            except KeyError:
+                raise AttributeError(name) from None
     
     def __delattr__(self, name):
         """Add support for deleting values."""
