@@ -26,6 +26,8 @@ def reload_modules():
 
     # Reload after running the test
     yield
+    # Close any handlers in the logging module
+    builder.cleanup_logging()
     reload(sys.modules['logging'])
     reload(sys.modules['config'])
     reload(sys.modules['build-export'])

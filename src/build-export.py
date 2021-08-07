@@ -5,7 +5,7 @@ import logging
 from config import get_config, ConfigurationError, msgbox
 from split_export import get_files, ExportFile
 from repo import RepositorySourceItem
-from convert import setup_session, cleanup, convert
+from convert import setup_session, cleanup as cleanup_convert, convert
 from deployment import add_deployment
 
 
@@ -13,7 +13,6 @@ def main():
     # Get configuration and handle command line arguments
     config = get_config()
     run(config)
-    cleanup()
 
 
 def run(config):
@@ -48,6 +47,7 @@ def run(config):
     total = sum(len(f.items) for f in files)
     logmsg= f"\nDone; exported {total} items to {len(files)} files.\n"
     logging.info(logmsg)
+    cleanup()
     if not config.no_gui:
         msgbox(logmsg)
 
@@ -77,6 +77,27 @@ def get_repo(config):
     else:
         raise ConfigurationError(f"Invalid repository type '{config.Source.type}' in configuration.")
     return get_data(config)
+
+
+def cleanup():
+    cleanup_convert()
+    cleanup_logging()
+
+
+def cleanup_logging():
+    """ Closes all resources taken by the loggers' handlers """
+
+    # Get root logger
+    loggers = [logging.getLogger()]
+    # Get all other loggers, if any
+    logger_names = logging.root.manager.loggerDict # pylint: disable=no-member
+    loggers = loggers + [logging.getLogger(name) for name in logger_names]
+
+    # Call close() on each handler in each logger
+    for logger in loggers:
+        for handler in logger.handlers:
+            handler.close()
+        logger.handlers.clear()
 
 
 if __name__ == '__main__':

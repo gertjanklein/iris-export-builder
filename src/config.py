@@ -231,7 +231,7 @@ def setup_basic_logging(cfgfile):
 
     # Display what we log as-is, no level strings etc.
     logging.basicConfig(handlers=handlers, level=logging.INFO,
-        format='%(message)s')
+        format='%(message)s', force=True)
 
 
 def setup_logging(config):
