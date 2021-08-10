@@ -150,28 +150,28 @@ def test_flattened():
     """ Tests the _flattened method.
     """
 
-    # A few flettened key, value pairs to test against
-    tests = (
-        ("Key", 42),
-        ("Section.Key", 43),
-        ("Section.SubSection.Key", 44),
-        ("Section.SubSection.SubSubSection.Key", 45),
-    )
+    # A few flattened key, value pairs to test against
+    tests = {
+        "Key": 42,
+        "Section.Key": 43,
+        "Section.SubSection.Key": 44,
+        "Section.SubSection.SubSubSection.Key": 45,
+    }
 
     # Populate the namespace
     cfg = ns.Namespace()
-    for k, v in tests:
+    for k, v in tests.items():
         ns.set_in_path(cfg, k, v)
-
-    # Get the keys in a list for searching
-    keys = [ k for k, _ in tests ]
     
-    # Make sure all expected keys are returned by _flattened
+    # Check the keys returned by _flattened
     for k, v in cfg._flattened():
-        # The key should be found; if not, KeyError is raised
-        idx = keys.index(k)
-        # It should only be found once
-        del keys[idx]
+        # The key should be found
+        assert k in tests, f"Unexpected or duplicate key '{k}'"
+        # The value should be correct
+        assert v == tests[k], f"Unexpected value '{v}' for key '{k}'"
+        # The key should only be found once
+        del tests[k]
 
-    assert not keys, "Not all keys returned by _flattened."
+    # All test keys should have been returned
+    assert not tests, "Not all keys returned by _flattened."
 
