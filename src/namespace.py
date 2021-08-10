@@ -18,17 +18,22 @@ class Namespace(SimpleNamespace):
 
     def __getitem__(self, name):
         """Add support for value = ns['key']."""
+
         return self.__dict__[name]
     
     def __setitem__(self, key, value):
         """Add support for ns['key'] = value."""
+
         self.__dict__[key] = value
 
     def __getattribute__(self, name):
         """Add support for local attributes."""
+
         try:
+            # If an actual attribute <name> is present, return that
             return object.__getattribute__(self, name)
         except AttributeError:
+            # Delegate to the key/value dictionary
             try:
                 return self.__dict__[name]
             except KeyError:
@@ -36,15 +41,40 @@ class Namespace(SimpleNamespace):
     
     def __delattr__(self, name):
         """Add support for deleting values."""
+
         d = object.__getattribute__(self, '__dict__')
         del d[name]
 
+    def __contains__(self, name):
+        """Add support for in operator."""
+        return self.__dict__.__contains__(name)
+
+    def __iter__(self):
+        """Add support for iteration."""
+
+        return self.__dict__.__iter__()
+
+    # ----- Helper methods
+
     def _get(self, key, default=None):
         """Retrieve a value, or default if not found."""
+
         return self.__dict__.get(key, default)
 
-    def __contains__(self, name):
-        return self.__dict__.__contains__(name)
+    def _flattened(self, sep=".", _prefix=None):
+        """Yields (dotted name, value) pairs for all values."""
+        
+        for key in self:
+            if key == '_name':
+                continue
+            value = self[key]
+            key = f"{_prefix}{sep}{key}" if _prefix else key
+            if isinstance(value, type(self)):
+                yield from value._flattened(sep, key)
+            else:
+                yield key, value
+
+
 
 
 def dict2ns(input:Mapping) -> Namespace:
@@ -85,7 +115,6 @@ def ns2dict(input:Namespace) -> dict:
 def set_in_path(ns:Namespace, path:str, value):
     """Sets a value in a sub-namespace, assuring it exists."""
 
-    assert '.' in path
     parts = path.split('.')
     # Add sub-namespaces, if not present
     for name in parts[:-1]:

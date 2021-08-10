@@ -134,3 +134,44 @@ def test_check_missing_attribute():
         value = cfg.value
     assert e.value.args[0] == 'value', f"Unexpected error attribute: {e.value.args[0]}"
 
+
+def test_flattened_empty():
+    """ Tests the _flattened method on empty namespace.
+    """
+
+    cfg = ns.Namespace()
+    seen = False
+    for n, v in cfg._flattened():
+        seen = True
+    assert not seen, "Flattened returned a value where it shouldn't."
+
+
+def test_flattened():
+    """ Tests the _flattened method.
+    """
+
+    # A few flettened key, value pairs to test against
+    tests = (
+        ("Key", 42),
+        ("Section.Key", 43),
+        ("Section.SubSection.Key", 44),
+        ("Section.SubSection.SubSubSection.Key", 45),
+    )
+
+    # Populate the namespace
+    cfg = ns.Namespace()
+    for k, v in tests:
+        ns.set_in_path(cfg, k, v)
+
+    # Get the keys in a list for searching
+    keys = [ k for k, _ in tests ]
+    
+    # Make sure all expected keys are returned by _flattened
+    for k, v in cfg._flattened():
+        # The key should be found; if not, KeyError is raised
+        idx = keys.index(k)
+        # It should only be found once
+        del keys[idx]
+
+    assert not keys, "Not all keys returned by _flattened."
+
