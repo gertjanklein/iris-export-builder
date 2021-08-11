@@ -61,16 +61,16 @@ class Namespace(SimpleNamespace):
 
         return self.__dict__.get(key, default)
 
-    def _flattened(self, sep=".", _prefix=None):
+    def _flattened(self, _prefix=None):
         """Yields (dotted name, value) pairs for all values."""
         
         for key in self:
             if key == '_name':
                 continue
             value = self[key]
-            key = f"{_prefix}{sep}{key}" if _prefix else key
+            key = f"{_prefix}.{key}" if _prefix else key
             if isinstance(value, type(self)):
-                yield from value._flattened(sep, key)
+                yield from value._flattened(key)
             else:
                 yield key, value
 
