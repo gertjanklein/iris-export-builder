@@ -1,12 +1,14 @@
+from typing import Any
+
 import sys
 from importlib import reload, import_module
 from unittest.mock import patch
-from os.path import dirname, join, exists
+import os
+from os.path import dirname, join, exists, relpath
 from io import BytesIO
+import zipfile
 import logging
 from pathlib import Path
-
-from typing import Any
 
 from lxml import etree
 import requests
@@ -339,3 +341,34 @@ def src_tree(tmp_path_factory):
     file.write_text(ESD_TPL, encoding='UTF-8')
 
     return base
+
+
+@pytest.fixture(scope="session")
+def src_tree_zipped(src_tree:Path):
+    """Returns the source tree in a zipfile."""
+
+    parent = str(src_tree.parent)
+
+    # We don't need an actual file
+    data = BytesIO()
+    with zipfile.ZipFile(data, mode='w') as zip:
+        for dirpath, _, filenames in os.walk(src_tree):
+            # Add directory entry
+            zip.write(dirpath, relpath(dirpath, parent))
+            # Add files in this directory
+            for filename in filenames:
+                full_path = join(dirpath, filename)
+                relative_path = relpath(full_path, parent)
+                zip.write(full_path, relative_path)
+    
+    # Save to file for debugging
+    data.seek(0)
+    with open(join(src_tree, '..', 'src_tree_zipped.zip'), 'wb') as f:
+        f.write(data.read())
+    
+    # Rewind the stream and create a new ZipFile object from it
+    data.seek(0)
+    zip = zipfile.ZipFile(data)
+    
+    return zip
+
