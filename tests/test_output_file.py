@@ -47,8 +47,7 @@ def test_unknown_replacement(src_tree, tmp_path):
     # Create export
     args = ['builder', cfgfile, '--no-gui']
     with patch('sys.argv', args):
-        cfg = config.get_config()
-    builder.run(cfg)
+        builder.main()
 
     # Make sure warning present in log file
     log = tmp_path / 'cfg.log'
@@ -78,8 +77,7 @@ def test_create_output_dir(src_tree, tmp_path):
     # Create export
     args = ['builder', cfgfile, '--no-gui']
     with patch('sys.argv', args):
-        cfg = config.get_config()
-    builder.run(cfg)
+        builder.main()
 
     # Make sure output file has replacement string as-is
     out = tmp_path / 'subpath' / 'out.xml'

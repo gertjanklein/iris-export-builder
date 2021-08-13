@@ -62,8 +62,7 @@ def get_build():
         
         args = ['builder', cfgfile, '--no-gui']
         with patch('sys.argv', args):
-            cfg = config.get_config()
-        builder.run(cfg)
+            builder.main()
         
         outfile = str(tmp_path / 'out.xml')
         with open(outfile, 'rb') as bf:
@@ -86,8 +85,7 @@ def get_build_separate():
         # Create build (in multiple files)
         args = ['builder', cfgfile, '--no-gui']
         with patch('sys.argv', args):
-            cfg = config.get_config()
-        builder.run(cfg)
+            builder.main()
         
         # Get source export
         src_file = str(tmp_path / 'out.xml')
