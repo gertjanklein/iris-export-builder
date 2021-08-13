@@ -8,8 +8,6 @@ from unittest.mock import patch
 
 import pytest
 
-import config
-
 builder = import_module("build-export") # type: Any
 
 
