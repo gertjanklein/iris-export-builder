@@ -12,16 +12,16 @@ from deployment import add_deployment
 def main():
     # Get configuration and handle command line arguments
     config = get_config()
-    run(config)
+    # Get object representing repo
+    repo = get_repo(config)
+    # Create the export file(s)
+    run(config, repo)
 
 
-def run(config):
+def run(config, repo):
     # Setup basic auth handler for IRIS, if we need to convert UDL to XML
     if config.Source.srctype == 'udl':
         setup_session(config)
-
-    # Get object representing repo
-    repo = get_repo(config)
 
     # Get list of files to create, with their items
     files = get_files(config, repo)
