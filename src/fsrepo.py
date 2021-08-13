@@ -33,8 +33,10 @@ class FsRepo(Repository):
 
         encoding = self.config.Source.encoding
 
-        for name in self.list_files(dir, False):
-            skip = any(rx.match(name) for rx in self.config.skip_regexes)
+        for name in self.list_files(dir):
+            # Normalize to forward slashes for use in regexes below
+            norm = '/' + (name.replace(os.sep, '/') if os.sep != '/' else name)
+            skip = any(rx.match(norm) for rx in self.config.skip_regexes)
             if skip:
                 logging.debug('Skipping %s because config requested so', name)
                 continue
@@ -66,13 +68,7 @@ class FsRepo(Repository):
                 logging.debug(f"Skipping {name} as it's not in a configured directory.")
 
 
-    def list_files(self, dir, is_flat):
-        if is_flat:
-            for entry in os.scandir(dir):
-                if not entry.is_dir():
-                    yield entry.name
-            return
-        
+    def list_files(self, dir):
         for root, dirs, files in os.walk(dir):
             relative = relpath(root, dir)
             if relative == '.':

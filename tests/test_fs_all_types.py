@@ -16,6 +16,7 @@ srctype = "xml"
 srcdir = 'src'
 cspdir = 'csp'
 datadir = 'data'
+skip = [{skip}]
 [CSP]
 export = 'embed'
 [Data]
@@ -36,7 +37,7 @@ outfile = 'out.xml'
 def test_all_types(src_tree, tmp_path, get_build, validate_schema):
     """ Tests creating an export with src, csp, and data items. """
 
-    cfg = CFG.format(path=src_tree)
+    cfg = CFG.format(path=src_tree, skip='')
     export = get_build(cfg, tmp_path)
 
     tree = etree.parse(BytesIO(export))
@@ -68,7 +69,7 @@ def test_all_types(src_tree, tmp_path, get_build, validate_schema):
 def test_all_types_separate(src_tree, tmp_path, get_build_separate, validate_schema):
     """ Tests separate exports for source, CSP, and data """
 
-    cfg = CFG.format(path=src_tree)
+    cfg = CFG.format(path=src_tree, skip='')
     cfg = cfg.replace("'embed'", "'separate'")
     src_export, csp_export, data_export = get_build_separate(cfg, tmp_path)
 
@@ -121,4 +122,25 @@ def test_all_types_separate(src_tree, tmp_path, get_build_separate, validate_sch
 
     validate_schema(data_export)
 
+
+@pytest.mark.usefixtures("reload_modules")
+def test_skip(src_tree, tmp_path, get_build, validate_schema):
+    """ Tests skipping items. """
+
+    # Get parsed configuration
+    paths = '/csp/app/hello.csp', '/data/Test*', '/src/a.cls.xml'
+    skips = ','.join((f"'{p}'" for p in paths))
+    cfg = CFG.format(path=src_tree, skip=skips)
+    export = get_build(cfg, tmp_path)
+
+    # Parse with ElementTree
+    tree = etree.parse(BytesIO(export))
+    assert tree.docinfo.root_name == 'Export'
+
+    # Make sure the things we skipped are not in the export
+    assert tree.find('/CSP[@name="hello.csp"]') is None, "hello.csp in export"
+    assert tree.find('/Document[@name="Test.LUT"]') is None, "Test.LUT in export"
+    assert tree.find('/Class[@name="tmp.a"]') is None, "tmp.a in export"
+
+    validate_schema(export)
 

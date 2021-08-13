@@ -40,7 +40,7 @@ def test_all_types(src_tree_zipped, tmp_path, get_config):
     """ Tests loading from a zip repo file. """
 
     # Get parsed configuration
-    toml = CFG + "\ntimestamps='update'"
+    toml = CFG.format(skip='') + "\ntimestamps='update'"
     config = get_config(toml, tmp_path)
 
     # Create a ZipRepo from the zipped source tree, and initialize it
@@ -73,4 +73,30 @@ def test_all_types(src_tree_zipped, tmp_path, get_config):
     assert tree.find('/Document[@name="Ens.Config.DefaultSettings.esd"]') is not None, "Ens.Config.DefaultSettings.esd not in export"
     assert tree.find('/Document[@name="Ens.Config.DefaultSettings.esd"]/defaultSettings/item/[@item="Test"]') is not None, "Test default setting not in export"
 
+
+@pytest.mark.usefixtures("reload_modules")
+def test_skip(src_tree_zipped, tmp_path, get_config):
+    """ Tests skipping items. """
+
+    # Get parsed configuration
+    paths = '/csp/app/hello.csp', '/data/Test*', '/src/a.cls.xml'
+    skips = ','.join((f"'{p}'" for p in paths))
+    toml = CFG.format(skip=skips) + "\ntimestamps='update'"
+    config = get_config(toml, tmp_path)
+
+    # Create a ZipRepo from the zipped source tree, and initialize it
+    repo = ZipRepo(config, src_tree_zipped)
+    repo.get_names()
+
+    # Create the export
+    builder.run(config, repo)
+
+    # Parse with ElementTree
+    tree = etree.parse(str(tmp_path / 'out.xml'))
+    assert tree.docinfo.root_name == 'Export'
+
+    # Make sure the things we skipped are not in the export
+    assert tree.find('/CSP[@name="hello.csp"]') is None, "hello.csp in export"
+    assert tree.find('/Document[@name="Test.LUT"]') is None, "Test.LUT in export"
+    assert tree.find('/Class[@name="tmp.a"]') is None, "tmp.a in export"
 
