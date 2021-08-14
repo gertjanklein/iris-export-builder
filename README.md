@@ -32,9 +32,10 @@ is present.
 
 The program requires a configuration file to be specified on its command
 line. The syntax is [toml](https://toml.io/en/), an ini-like language
-for use in configuration files. A detailed desciption of the configuration
-options can be found in [doc/configuration.md](doc/configuration.md). A
-[template configuration file](template.toml) is provided.
+for use in configuration files. A detailed description of the
+configuration options can be found in
+[doc/configuration.md](doc/configuration.md). A [template configuration
+file](template.toml) is provided.
 
 Currently, two commandline overrides are supported, that take precedence
 over the values in the configuration file:
