@@ -45,6 +45,10 @@ def _convert_parallel(config:ns.Namespace, items:list, threads:int):
             futures.append(executor.submit(_convert_to_xml, config, item))
         wait(futures)
         
+        # Make exceptions raised in a thread reraise here
+        for future in futures:
+            future.result()
+        
         # Call cleanup code to release requests sessions
         futures.clear()
         for _ in range(threads):

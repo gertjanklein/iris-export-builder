@@ -25,13 +25,37 @@ outfile = 'out.xml'
 @pytest.mark.usefixtures("reload_modules")
 def test_data_in_udl_tree(server_toml, tmp_path, src_tree_udl, get_build):
     """ Test that data (=XML) in an UDL source tree raises an error.
+
+    Tests conversion in the main thread, so exceptions need no special
+    handling.
     """
 
     if not server_toml:
         pytest.skip("No XML -> UDL server found.")
     
     cfg = CFG.format(path=src_tree_udl, srcdir='', datadir='')
-    cfg += "\n" + server_toml
+    cfg = f"{cfg}\nthreads=1\n{server_toml}"
+
+    # Getting export should fail at an attempt to convert the lookup
+    # table from UDL to XML
+    with pytest.raises(ValueError) as e:
+        export = get_build(cfg, tmp_path)
+    assert "Error converting" in e.value.args[0], "Wrong error message"
+
+
+@pytest.mark.usefixtures("reload_modules")
+def test_data_in_udl_tree_threads(server_toml, tmp_path, src_tree_udl, get_build):
+    """ Test that data (=XML) in an UDL source tree raises an error.
+    
+    Specifically tests for conversion in threads; errors raised there
+    should be re-raised in the main thread.
+    """
+
+    if not server_toml:
+        pytest.skip("No XML -> UDL server found.")
+    
+    cfg = CFG.format(path=src_tree_udl, srcdir='', datadir='')
+    cfg = f"{cfg}\nthreads=2\n{server_toml}"
 
     # Getting export should fail at an attempt to convert the lookup
     # table from UDL to XML
