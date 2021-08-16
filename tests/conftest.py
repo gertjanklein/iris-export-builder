@@ -277,9 +277,9 @@ ESD_TPL = """\
 def src_tree(tmp_path_factory):
     """ Creates a source tree with items of all types.
 
-    Used in all tests in this module. Returns the base directory
-    for the source tree.
+    Returns the base directory for the source tree.
     """
+    
     # Create a base temp directory for this module
     base = tmp_path_factory.mktemp("basic_source_tree", numbered=False) # type: Path
     
