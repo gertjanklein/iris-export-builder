@@ -119,7 +119,7 @@ def check(config:ns.Namespace):
     ns.check_default(local, 'deployment', False)
     ns.check_default(local, 'logdir', '')
     ns.check_default(local, 'loglevel', '')
-    ns.check_default(local, 'threads', 4)
+    ns.check_default(local, 'threads', 1)
     ns.check_oneof(local, 'timestamps', ('clear', 'update', 'leave'), 'leave')
     
     # Check data configuration
