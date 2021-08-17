@@ -45,15 +45,15 @@ def _convert_parallel(config:ns.Namespace, items:list, threads:int):
             futures.append(executor.submit(_convert_to_xml, config, item))
         wait(futures)
         
+        # Call cleanup code to release requests sessions
+        cleanup_futures = []
+        for _ in range(threads):
+            cleanup_futures.append(executor.submit(_cleanup_thread))
+        wait(cleanup_futures)
+        
         # Make exceptions raised in a thread reraise here
         for future in futures:
             future.result()
-        
-        # Call cleanup code to release requests sessions
-        futures.clear()
-        for _ in range(threads):
-            futures.append(executor.submit(_cleanup_thread))
-        wait(futures)
 
 
 def _convert_to_xml(config, item):
@@ -103,6 +103,10 @@ def setup_session(config:ns.Namespace):
         msg = f"Error connecting to server for converting UDL to XML:\n{e}."
         raise ConfigurationError(msg) from None
     
+    if hasattr(tls, 'session'):
+        tls.session.close()
+        del tls.session
+
     tls.session = session
 
 
@@ -111,6 +115,7 @@ def cleanup():
     
     if hasattr(tls, "session"):
         tls.session.close()
+        del tls.session
 
 
 # -----
@@ -132,6 +137,7 @@ def _cleanup_thread():
 
     if hasattr(tls, "session"):
         tls.session.close()
+        del tls.session
         # Slight delay so other threads get assigned a cleanup task as well
         sleep(0.005)
 
