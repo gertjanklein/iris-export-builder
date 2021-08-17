@@ -6,6 +6,7 @@ from lxml import etree
 
 import pytest
 
+import namespace as ns
 builder = import_module("build-export") # type: Any
 
 
@@ -108,6 +109,22 @@ def test_data_separate_threads(server_toml, tmp_path, src_tree_udl, get_build):
     assert tree.docinfo.root_name == 'Export'
     assert tree.find('/Class[@name="tmp.a"]') is not None, "tmp.a not in export"
     assert tree.find('/Document[@name="Test.LUT"]') is not None, "Test.LUT not in export"
+
+
+@pytest.mark.usefixtures("reload_modules")
+def test_error_no_server(tmp_path, get_build):
+    """ Test UDL -> XML conversion server error.
+    """
+
+    # Server definition that should fail (invalid port)
+    server_toml = "[Server]\nhost='localhost'\nport=55555\n"
+    cfg = CFG.format(path=tmp_path, srcdir='', datadir='')
+    cfg = f"{cfg}\n{server_toml}"
+
+    # Connection failure should raise a configuration error
+    with pytest.raises(ns.ConfigurationError) as e:
+        export = get_build(cfg, tmp_path)
+    assert "Error connecting" in e.value.args[0], "Wrong error message"
 
 
 # =====
