@@ -73,7 +73,31 @@ def test_data_separate(server_toml, tmp_path, src_tree_udl, get_build):
         pytest.skip("No XML -> UDL server found.")
     
     cfg = CFG.format(path=src_tree_udl, srcdir='', datadir='data')
-    cfg += "\n" + server_toml
+    cfg = f"{cfg}\nthreads=1\n{server_toml}"
+
+    # Getting export should succeed, data directory not UDL to XML
+    # converted
+    export = get_build(cfg, tmp_path)
+
+    # Check export is valid and contains class and data
+    tree = etree.parse(BytesIO(export))
+    assert tree.docinfo.root_name == 'Export'
+    assert tree.find('/Class[@name="tmp.a"]') is not None, "tmp.a not in export"
+    assert tree.find('/Document[@name="Test.LUT"]') is not None, "Test.LUT not in export"
+
+
+@pytest.mark.usefixtures("reload_modules")
+def test_data_separate_threads(server_toml, tmp_path, src_tree_udl, get_build):
+    """ Test that specifying data directory prevents UDL conversion.
+
+    Specifically tests conversion in threads.
+    """
+
+    if not server_toml:
+        pytest.skip("No XML -> UDL server found.")
+    
+    cfg = CFG.format(path=src_tree_udl, srcdir='', datadir='data')
+    cfg = f"{cfg}\nthreads=2\n{server_toml}"
 
     # Getting export should succeed, data directory not UDL to XML
     # converted
