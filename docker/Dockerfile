@@ -1,6 +1,5 @@
 # The IRIS image to use
-#ARG IMAGE=store/intersystems/iris-community:2020.3.0.221.0
-ARG IMAGE=store/intersystems/iris-community:2021.1.0.215.0
+ARG IMAGE=store/intersystems/iris-community:2021.2.0.649.0
 
 FROM $IMAGE
 
