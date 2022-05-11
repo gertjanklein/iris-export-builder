@@ -97,7 +97,7 @@ class RepositoryCspItem(RepositoryItem):
         
         if self.is_text:
             name = 'CSP'
-            data = etree.CDATA(self.data)
+            data = etree.CDATA('\n'+ self.data)
         else:
             name = 'CSPBase64'
             data = b'\n'+ base64.encodebytes(self.data)
