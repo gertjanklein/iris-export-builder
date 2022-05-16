@@ -3,5 +3,6 @@ services:
   iris_udl_to_xml:
     build:
       context: .
+    command: --check-caps false
     ports:
       - 12000-12500:52773
