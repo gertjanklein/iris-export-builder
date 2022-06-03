@@ -119,3 +119,6 @@ loglevel = 'info'
 # Timestamp handling. One of 'clear', 'update', or 'leave' (default).
 timestamps = 'leave'
 
+# Force override of export version. Either 25 (Cache) or 26 (IRIS).
+export_version = ''
+

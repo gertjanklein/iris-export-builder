@@ -68,7 +68,7 @@ def get_config() -> ns.Namespace:
         if not isabs(path):
             path = join(abspath(config.cfgdir), path)
         try:
-            with open(path) as f:
+            with open(path, encoding='UTF-8') as f:
                 config.GitHub.token = f.read().strip()
         except OSError as e:
             raise ConfigurationError(f"Error reading token file {path}: {e}") from None
@@ -121,6 +121,9 @@ def check(config:ns.Namespace):
     ns.check_default(local, 'loglevel', '')
     ns.check_default(local, 'threads', 1)
     ns.check_oneof(local, 'timestamps', ('clear', 'update', 'leave'), 'leave')
+    ns.check_oneof(local, 'export_version', (25, 26, '', None), '')
+    if local.export_version == '':
+        local.export_version = None
     
     # Check data configuration
     if src.datadir:

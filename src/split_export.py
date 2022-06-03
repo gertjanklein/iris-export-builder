@@ -121,7 +121,7 @@ class ExportFile:
                 root.append(el)
         
         # Set version and generator attributes
-        ver = maxver or minver or 25
+        ver = self.config.Local.export_version or maxver or minver or 25
         root.attrib['generator'] = 'IRIS' if ver > 25 else 'Cache'
         root.attrib['version'] = str(ver)
 

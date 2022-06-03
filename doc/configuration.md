@@ -262,3 +262,13 @@ where to log.
   
   UDL sources from GitHub don't have timestamps, but they get one from
   the UDL to XML conversion. These are always stripped.
+
+* **export_version**: specifies the version to use in the generated
+  export file. Possible values are `25` (Cache) and `26` (IRIS). This is
+  especially useful for UDL sources. If not specified here, the version
+  used will be the one the UDL to XML conversion server creates. If the
+  sources are actually saved from a Caché server, and the conversion
+  server is IRIS (or vice versa), this can lead to problems with class
+  storage definitions.
+  
+  For XML sources, this setting is usually best left empty.
