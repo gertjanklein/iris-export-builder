@@ -41,7 +41,7 @@ def get_config():
         """ Returns a namespace for a TOML in a string """
 
         cfgfile = str(tmp_path / 'cfg.toml')
-        with open(cfgfile, 'wt') as f:
+        with open(cfgfile, 'wt', encoding='UTF-8') as f:
             f.write(toml)
         
         args = ['builder', cfgfile, '--no-gui']
@@ -59,7 +59,7 @@ def get_build():
         """Retrieves a build using the toml config passed in."""
         
         cfgfile = str(tmp_path / 'cfg.toml')
-        with open(cfgfile, 'wt') as f:
+        with open(cfgfile, 'wt', encoding='UTF-8') as f:
             f.write(toml)
         
         args = ['builder', cfgfile, '--no-gui']
@@ -81,7 +81,7 @@ def get_build_separate():
         
         # Write configuration TOML
         cfgfile = str(tmp_path / 'cfg.toml')
-        with open(cfgfile, 'wt') as f:
+        with open(cfgfile, 'wt', encoding='UTF-8') as f:
             f.write(toml)
         
         # Create build (in multiple files)
@@ -146,7 +146,7 @@ def _open_local():
     name = join(dirname(__file__), 'server.toml')
     if not exists(name):
         return None
-    with open(name) as f:
+    with open(name, encoding='UTF-8') as f:
         return f.read()
 
 def docker_available():
