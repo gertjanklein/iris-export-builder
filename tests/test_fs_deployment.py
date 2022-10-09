@@ -70,7 +70,7 @@ def test_build_deployment(src_tree, tmp_path, get_build, validate_schema):
 
     # The project text document is the last entry in the Studio project
     ptd = tree.find(f'/Project/Items/ProjectItem[{len(project_items)}]')
-    assert ptd
+    assert ptd is not None
     ptd_name = ptd.get('name')
     assert tree.find(f'/Document[@name="{ptd_name}"]') is not None, \
         "Deployment document not in export"

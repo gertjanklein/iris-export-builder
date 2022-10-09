@@ -62,7 +62,7 @@ def test_build_deployment(tmpdir, server_toml, get_build, validate_schema):
     assert len(tree.findall('/Project/Items/ProjectItem')) == 24, \
         "Unexpected number of items in export"
     ptd = tree.find('/Project/Items/ProjectItem[24]')
-    assert ptd, "Item[24] missing"
+    assert ptd is not None, "Item[24] missing"
     ptd_name = ptd.get('name')
     assert tree.find(f'/Document[@name="{ptd_name}"]') is not None, \
         "Deployment document not in export"
@@ -73,7 +73,7 @@ def test_build_deployment(tmpdir, server_toml, get_build, validate_schema):
     assert len(subtree.findall('/Contents/Item')) == 23, \
         "Unexpected number of items in deployment"
     tmp = subtree.find('/Contents/Item[23]')
-    assert tmp, "Item[23] missing"
+    assert tmp is not None, "Item[23] missing"
     assert tmp.text == 'Strix.INC', "Unexpected order of items in deployment"
     
     validate_schema(export, 'irisexport.xsd')
