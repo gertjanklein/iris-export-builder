@@ -2,6 +2,7 @@ wheel
 toml
 lxml
 requests
+docker-compose
 pylint
 pytest
 pytest-docker
