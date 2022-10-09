@@ -1,3 +1,4 @@
 toml
 lxml
 requests
+strix-py-ns @ git+https://github.com/gertjanklein/strix-py-ns.git@v0.5.0
