@@ -10,7 +10,8 @@ from deployment import add_deployment
 
 
 def main():
-    # Get configuration and handle command line arguments
+    """ Get configuration and handle command line arguments """
+    
     config = get_config()
     # Get object representing repo
     repo = get_repo(config)
@@ -19,6 +20,8 @@ def main():
 
 
 def run(config, repo):
+    """ Main entry point for code and tests """
+    
     # Setup basic auth handler for IRIS, if we need to convert UDL to XML
     if config.Source.srctype == 'udl':
         setup_session(config)
@@ -75,11 +78,14 @@ def get_repo(config):
     elif config.Source.type == 'directory':
         from fsrepo import get_data
     else:
-        raise ConfigurationError(f"Invalid repository type '{config.Source.type}' in configuration.")
+        msg = f"Invalid repository type '{config.Source.type}' in configuration."
+        raise ConfigurationError(msg)
     return get_data(config)
 
 
 def cleanup():
+    """ Cleanup for subsequent runs """
+    
     cleanup_convert()
     cleanup_logging()
 

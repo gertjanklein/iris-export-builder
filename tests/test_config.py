@@ -6,8 +6,9 @@ from unittest.mock import patch
 
 import pytest
 
-import config
 import namespace as ns
+
+import config
 
 
 CFG = """
@@ -34,13 +35,14 @@ def test_missing_config():
         nonlocal seen
         seen = True
         msg = msg.split('\n', maxsplit=1)[0]
-        assert msg == f"Error: file {cfgfile} not found.", f"Missing config file error message wrong: {msg}"
+        assert msg == f"Error: file {cfgfile} not found.", \
+            f"Missing config file error message wrong: {msg}"
         assert is_error, "Error mode for msgbox not set."
 
     # Pass a missing config file name to the configuration parser
     with patch('sys.argv', args), patch('config.msgbox', msgbox):
         with pytest.raises(SystemExit) as e:
-            cfg = config.get_config()
+            config.get_config()
         code = e.value.args[0]
         assert code == 1, f"Exit code not 1 but {code}"
         assert seen, "msgbox not called"
@@ -53,12 +55,12 @@ def test_logfile_name_toml(tmp_path):
     # Create configuration with .toml extension
     toml = CFG.format(path=tmp_path, cspdir='')
     cfgfile = tmp_path / 'cfg.toml'
-    with open(cfgfile, 'wt') as f:
+    with open(cfgfile, 'wt', encoding='utf8') as f:
         f.write(toml)
 
     args = ['builder', str(cfgfile), '--no-gui']
     with patch('sys.argv', args):
-        cfg = config.get_config()
+        config.get_config()
 
     log = tmp_path / 'cfg.log'
     assert log.exists(), "Logfile does not exist under expected name"
@@ -71,12 +73,12 @@ def test_logfile_name_not_toml(tmp_path):
     # Create configuration with .toml extension
     toml = CFG.format(path=tmp_path, cspdir='')
     cfgfile = tmp_path / 'cfg.tml'
-    with open(cfgfile, 'wt') as f:
+    with open(cfgfile, 'wt', encoding='utf8') as f:
         f.write(toml)
 
     args = ['builder', str(cfgfile), '--no-gui']
     with patch('sys.argv', args):
-        cfg = config.get_config()
+        config.get_config()
 
     log = tmp_path / 'cfg.tml.log'
     assert log.exists(), "Logfile does not exist under expected name"
@@ -88,13 +90,13 @@ def test_CSP_section_check(tmp_path):
 
     toml = CFG.format(path=tmp_path, cspdir='csp')
     cfgfile = tmp_path / 'cfg.tml'
-    with open(cfgfile, 'wt') as f:
+    with open(cfgfile, 'wt', encoding='utf8') as f:
         f.write(toml)
 
     args = ['builder', str(cfgfile), '--no-gui']
     with patch('sys.argv', args):
         with pytest.raises(ns.ConfigurationError) as e:
-            cfg = config.get_config()
+            config.get_config()
         msg:str = e.value.args[0]
         assert msg.startswith("Section CSP not found"), f"Unexpected message {msg}"
 
@@ -106,13 +108,13 @@ def test_CSPparsers_section_check(tmp_path):
     toml = CFG.format(path=tmp_path, cspdir='csp')
     toml += '[CSP]'
     cfgfile = tmp_path / 'cfg.tml'
-    with open(cfgfile, 'wt') as f:
+    with open(cfgfile, 'wt', encoding='utf8') as f:
         f.write(toml)
 
     args = ['builder', str(cfgfile), '--no-gui']
     with patch('sys.argv', args):
         with pytest.raises(ns.ConfigurationError) as e:
-            cfg = config.get_config()
+            config.get_config()
         msg:str = e.value.args[0]
         assert msg.startswith("At least one [[CSP.parsers]] section"), f"Unexpected message {msg}"
 
@@ -140,7 +142,7 @@ def test_usage_msg():
 
     with patch('sys.argv', args), patch('config.msgbox', msgbox):
         with pytest.raises(SystemExit) as e:
-            cfg = config.get_config()
+            config.get_config()
         code = e.value.args[0]
         assert code == 2, f"Exit code not 2 but {code}"
         assert seen, "msgbox not called"
@@ -169,7 +171,7 @@ def test_windows_MessageBoxW_error():
 
     with patch('sys.argv', args), patch('ctypes.windll.user32.MessageBoxW', msgbox):
         with pytest.raises(SystemExit) as e:
-            cfg = config.get_config()
+            config.get_config()
         code = e.value.args[0]
         assert code == 2, f"Exit code not 2 but {code}"
         assert seen, "msgbox not called"
@@ -197,7 +199,7 @@ def test_help_msg():
 
     with patch('sys.argv', args), patch('config.msgbox', msgbox):
         with pytest.raises(SystemExit) as e:
-            cfg = config.get_config()
+            config.get_config()
         code = e.value.args[0]
         assert code == 0, f"Exit code not 0 but {code}"
         assert seen, "msgbox not called"
@@ -225,7 +227,7 @@ def test_windows_MessageBoxW_info():
 
     with patch('sys.argv', args), patch('ctypes.windll.user32.MessageBoxW', msgbox):
         with pytest.raises(SystemExit) as e:
-            cfg = config.get_config()
+            config.get_config()
         code = e.value.args[0]
         assert code == 0, f"Exit code not 0 but {code}"
         assert seen, "msgbox not called"

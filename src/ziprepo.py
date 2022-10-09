@@ -2,7 +2,7 @@
 """
 
 from __future__ import annotations
-from typing import Sequence
+from typing import List, Sequence
 
 import logging
 from zipfile import ZipFile, ZipInfo
@@ -13,9 +13,9 @@ from repo import Repository, RepositorySourceItem, RepositoryCspItem, Repository
 class ZipRepo(Repository):
     """Handle a zipped repository."""
     
-    src_items:Sequence[ZipRepoItem]
-    csp_items:Sequence[ZipRepoCspItem]
-    data_items:Sequence[ZipRepoDataItem]
+    src_items:List[ZipRepoItem]
+    csp_items:List[ZipRepoCspItem]
+    data_items:List[ZipRepoDataItem]
 
     def __init__(self, config, zip:ZipFile):
         super().__init__(config) 
@@ -34,7 +34,8 @@ class ZipRepo(Repository):
 
         # The first item in the zip file is the top-level directory
         base = zip_items[0].filename
-        if base[-1] == '/': base = base[:-1]
+        if base[-1] == '/':
+            base = base[:-1]
         self.name = base
 
         # Process subsequent items
@@ -42,11 +43,13 @@ class ZipRepo(Repository):
             name = item.filename
 
             # Ignore directory entries
-            if name[-1] == '/': continue
+            if name[-1] == '/':
+                continue
             # First part is base dir, second (possibly) zip dir
             parts = name.split('/')
             # Skip .gitignore etc.
-            if parts[-1][0] == '.': continue
+            if parts[-1][0] == '.':
+                continue
 
             # Check for items we should skip (remove base directory name first)
             tmp = '/' + name.split('/', 1)[1]
@@ -67,7 +70,8 @@ class ZipRepo(Repository):
             
             elif srcdir == '' or path_matches(srcdir, parts[1:]):
                 # Non-CSP items always have a type
-                if not '.' in parts[-1]: continue
+                if not '.' in parts[-1]:
+                    continue
                 self.src_items.append(ZipRepoItem(self.zip, item, srcdir, encoding))
 
 

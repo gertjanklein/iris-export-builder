@@ -44,11 +44,15 @@ def test_csp_default(src_tree, tmp_path, get_build):
     tree = etree.parse(BytesIO(export))
     assert tree.docinfo.root_name == 'Export'
 
-    assert tree.find('/CSP[@name="hello.csp"][@application="/app"]') is not None, "hello.csp not in export"
-    assert tree.find('/CSP[@name="goodbye.csp"][@application="/app"]') is not None, "goodbye.csp not in export"
+    assert tree.find('/CSP[@name="hello.csp"][@application="/app"]') is not None, \
+        "hello.csp not in export"
+    assert tree.find('/CSP[@name="goodbye.csp"][@application="/app"]') is not None, \
+        "goodbye.csp not in export"
     
-    assert tree.find('/CSP[@name="hello2.csp"][@application="/app2"]') is not None, "hello2.csp not in export"
-    assert tree.find('/CSP[@name="goodbye2.csp"][@application="/app2"]') is not None, "goodbye2.csp not in export"
+    assert tree.find('/CSP[@name="hello2.csp"][@application="/app2"]') is not None, \
+        "hello2.csp not in export"
+    assert tree.find('/CSP[@name="goodbye2.csp"][@application="/app2"]') is not None, \
+        "goodbye2.csp not in export"
 
 
 @pytest.mark.usefixtures("reload_modules")
@@ -66,11 +70,15 @@ def test_csp_merge_app(src_tree, tmp_path, get_build):
     tree = etree.parse(BytesIO(export))
     assert tree.docinfo.root_name == 'Export'
 
-    assert tree.find('/CSP[@name="hello.csp"][@application="/app"]') is not None, "hello.csp not in export"
-    assert tree.find('/CSP[@name="goodbye.csp"][@application="/app"]') is not None, "goodbye.csp not in export"
+    assert tree.find('/CSP[@name="hello.csp"][@application="/app"]') is not None, \
+        "hello.csp not in export"
+    assert tree.find('/CSP[@name="goodbye.csp"][@application="/app"]') is not None, \
+        "goodbye.csp not in export"
     
-    assert tree.find('/CSP[@name="hello2.csp"][@application="/app"]') is not None, "hello2.csp not in export"
-    assert tree.find('/CSP[@name="goodbye2.csp"][@application="/app"]') is not None, "goodbye2.csp not in export"
+    assert tree.find('/CSP[@name="hello2.csp"][@application="/app"]') is not None, \
+        "hello2.csp not in export"
+    assert tree.find('/CSP[@name="goodbye2.csp"][@application="/app"]') is not None, \
+        "goodbye2.csp not in export"
 
 
 @pytest.mark.usefixtures("reload_modules")
@@ -85,8 +93,9 @@ def test_no_match_raises(src_tree, tmp_path, get_build):
     cfg = CFG.format(path=src_tree) + '\n' + parsers
     
     with pytest.raises(ConfigurationError) as e:
-        export = get_build(cfg, tmp_path)
-    assert "does not match regex in parser 1" in e.value.args[0], f"Unexpected error message {e.value.args[0]}"
+        get_build(cfg, tmp_path)
+    assert "does not match regex in parser 1" in e.value.args[0], \
+        f"Unexpected error message {e.value.args[0]}"
 
 
 @pytest.mark.usefixtures("reload_modules")
@@ -105,11 +114,15 @@ def test_no_match_skips(src_tree, tmp_path, get_build):
     tree = etree.parse(BytesIO(export))
     assert tree.docinfo.root_name == 'Export'
     
-    assert tree.find('/CSP[@name="hello.csp"][@application="/app"]') is not None, "hello.csp not in export"
-    assert tree.find('/CSP[@name="goodbye.csp"][@application="/app"]') is not None, "goodbye.csp not in export"
+    assert tree.find('/CSP[@name="hello.csp"][@application="/app"]') is not None, \
+        "hello.csp not in export"
+    assert tree.find('/CSP[@name="goodbye.csp"][@application="/app"]') is not None, \
+        "goodbye.csp not in export"
     
-    assert tree.find('/CSP[@name="hello2.csp"][@application="/app"]') is None, "hello2.csp in export"
-    assert tree.find('/CSP[@name="goodbye2.csp"][@application="/app"]') is None, "goodbye2.csp in export"
+    assert tree.find('/CSP[@name="hello2.csp"][@application="/app"]') is None, \
+        "hello2.csp in export"
+    assert tree.find('/CSP[@name="goodbye2.csp"][@application="/app"]') is None, \
+        "goodbye2.csp in export"
 
     file = tmp_path / 'cfg.log'
     assert "does not match regex in parser 1" in file.read_text(), "No skip warning in log"
@@ -126,8 +139,9 @@ def test_app_leading_slash(src_tree, tmp_path, get_build):
     
     cfg = CFG.format(path=src_tree) + '\n' + parsers + "app = 'app'"
     with pytest.raises(ValueError) as e:
-        export = get_build(cfg, tmp_path)
-    assert "must start with a slash" in e.value.args[0], f"Unexpected error message {e.value.args[0]}"
+        get_build(cfg, tmp_path)
+    assert "must start with a slash" in e.value.args[0], \
+        f"Unexpected error message {e.value.args[0]}"
 
 
 @pytest.mark.usefixtures("reload_modules")
@@ -141,8 +155,9 @@ def test_app_trailing_slash(src_tree, tmp_path, get_build):
     
     cfg = CFG.format(path=src_tree) + '\n' + parsers + "app = '/app/'"
     with pytest.raises(ValueError) as e:
-        export = get_build(cfg, tmp_path)
-    assert "must not end with a slash" in e.value.args[0], f"Unexpected error message {e.value.args[0]}"
+        get_build(cfg, tmp_path)
+    assert "must not end with a slash" in e.value.args[0], \
+        f"Unexpected error message {e.value.args[0]}"
 
 
 @pytest.mark.usefixtures("reload_modules")
@@ -156,8 +171,9 @@ def test_page_leading_slash(src_tree, tmp_path, get_build):
     
     cfg = CFG.format(path=src_tree) + '\n' + parsers + "item = '/item.csp'"
     with pytest.raises(ValueError) as e:
-        export = get_build(cfg, tmp_path)
-    assert "must not start with a slash" in e.value.args[0], f"Unexpected error message {e.value.args[0]}"
+        get_build(cfg, tmp_path)
+    assert "must not start with a slash" in e.value.args[0], \
+        f"Unexpected error message {e.value.args[0]}"
 
 
 @pytest.mark.usefixtures("reload_modules")
@@ -171,6 +187,7 @@ def test_page_trailing_slash(src_tree, tmp_path, get_build):
     
     cfg = CFG.format(path=src_tree) + '\n' + parsers + "item = 'item.csp/'"
     with pytest.raises(ValueError) as e:
-        export = get_build(cfg, tmp_path)
-    assert "must not end with a slash" in e.value.args[0], f"Unexpected error message {e.value.args[0]}"
+        get_build(cfg, tmp_path)
+    assert "must not end with a slash" in e.value.args[0], \
+        f"Unexpected error message {e.value.args[0]}"
 

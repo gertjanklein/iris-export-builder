@@ -68,7 +68,7 @@ def test_external_def_all(tmp_path:Path, get_config):
         "namespace = 'Walhalla'\n" \
         "https = true\n"
         
-    with open(extdef, 'wt') as f:
+    with open(extdef, 'wt', encoding='utf8') as f:
         f.write(settings)
 
     override = f"[Server]\ntake_from = '{extdef}'"
@@ -95,7 +95,7 @@ def test_external_relative_location(tmp_path:Path, get_config):
 
     extdef = dir / 'svr.toml'
     settings = "host = '127.0.0.1'\n"
-    with open(extdef, 'wt') as f:
+    with open(extdef, 'wt', encoding='utf8') as f:
         f.write(settings)
 
     relpath = extdef.relative_to(tmp_path)
@@ -115,7 +115,7 @@ def test_external_with_header(tmp_path:Path, get_config):
 
     extdef = tmp_path / 'svr.toml'
     settings = "[Server]\nhost = '127.0.0.1'\n"
-    with open(extdef, 'wt') as f:
+    with open(extdef, 'wt', encoding='utf8') as f:
         f.write(settings)
 
     override = "[Server]\ntake_from = 'svr.toml'"

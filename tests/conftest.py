@@ -76,6 +76,8 @@ def get_build():
 
 @pytest.fixture
 def get_build_separate():
+    """ Returns a method creating separate code/csp/data exports """
+    
     def get_build(toml:str, tmp_path):
         """Retrieves a build using the toml config passed in."""
         
@@ -153,22 +155,22 @@ def docker_available():
     """ Checks whether Docker is available """
 
     try:
-        client = docker.from_env()
+        docker.from_env()
         return True
-    except docker.errors.DockerException:
+    except docker.errors.DockerException: # type:ignore
         return False
 
 
 if _server_toml := _open_local():
     # A local toml server definition is available; use that
     @pytest.fixture(scope="session")
-    def server_toml():
+    def server_toml(): # type:ignore
         return _server_toml
 
 elif not docker_available():
     # Docker unavailable; return None to indicate no server available
     @pytest.fixture(scope="session")
-    def server_toml():
+    def server_toml():# type:ignore
         return None
 
 else:
@@ -186,7 +188,7 @@ def iris_service(docker_ip, docker_services):
     """Ensure that HTTP service is up and responsive."""
 
     port = docker_services.port_for("iris_udl_to_xml", 52773)
-    url = "http://{}:{}/api/atelier/".format(docker_ip, port)
+    url = f"http://{docker_ip}:{port}/api/atelier/"
     docker_services.wait_until_responsive(
         timeout=120.0, pause=0.5, check=lambda: is_responsive(url)
     )

@@ -40,7 +40,7 @@ def test_data_in_udl_tree(server_toml, tmp_path, src_tree_udl, get_build):
     # Getting export should fail at an attempt to convert the lookup
     # table from UDL to XML
     with pytest.raises(ValueError) as e:
-        export = get_build(cfg, tmp_path)
+        get_build(cfg, tmp_path)
     assert "Error converting" in e.value.args[0], "Wrong error message"
 
 
@@ -61,7 +61,7 @@ def test_data_in_udl_tree_threads(server_toml, tmp_path, src_tree_udl, get_build
     # Getting export should fail at an attempt to convert the lookup
     # table from UDL to XML
     with pytest.raises(ValueError) as e:
-        export = get_build(cfg, tmp_path)
+        get_build(cfg, tmp_path)
     assert "Error converting" in e.value.args[0], "Wrong error message"
 
 
@@ -123,7 +123,7 @@ def test_error_no_server(tmp_path, get_build):
 
     # Connection failure should raise a configuration error
     with pytest.raises(ns.ConfigurationError) as e:
-        export = get_build(cfg, tmp_path)
+        get_build(cfg, tmp_path)
     assert "Error connecting" in e.value.args[0], "Wrong error message"
 
 
@@ -158,7 +158,7 @@ def src_tree_udl(tmp_path_factory):
     """
     
     # Base source tree
-    base = tmp_path_factory.mktemp("basic_source_tree_udl", numbered=False) # type: Path
+    base = tmp_path_factory.mktemp("basic_source_tree_udl", numbered=False)
 
     # Add a (UDL) class
     dir = base / 'src'

@@ -19,7 +19,7 @@ def get_data(config):
     headers = { 'Authorization': f'token { gh.token}' } if  gh.token else {}
     
     # Retrieve data and create ZipFile object
-    logging.info(f'Retrieving {url}\n')
+    logging.info('Retrieving %s\n', url)
     rq = urq.Request(url, headers=headers)
     with urq.urlopen(rq) as rsp:
         data = io.BytesIO(rsp.read())

@@ -6,7 +6,6 @@ from lxml import etree
 
 import pytest
 
-import namespace as ns
 builder = import_module("build-export") # type: Any
 
 
@@ -81,7 +80,7 @@ def src_tree_udl(tmp_path_factory):
     """
     
     # Base source tree
-    base = tmp_path_factory.mktemp("source", numbered=False) # type: Path
+    base = tmp_path_factory.mktemp("source", numbered=False)
 
     # Add a (UDL) class
     dir = base / 'src'

@@ -5,8 +5,8 @@ from pathlib import Path
 
 import pytest
 
-from config import ConfigurationError
 import namespace as ns
+from config import ConfigurationError
 
 
 # Basic configuration for the tests in this module
@@ -40,7 +40,7 @@ def test_token_external_no_nl(tmp_path:Path, get_config):
     """ Tests token from external file """
 
     ext = tmp_path / 'token.txt'
-    with open(ext, 'wt') as f:
+    with open(ext, 'wt', encoding='utf8') as f:
         f.write('def')
 
     cfg = CFG.format(token=f"@{ext}")
@@ -56,7 +56,7 @@ def test_token_external_with_nl(tmp_path:Path, get_config):
     """ Tests token from external file """
 
     ext = tmp_path / 'token.txt'
-    with open(ext, 'wt') as f:
+    with open(ext, 'wt', encoding='utf8') as f:
         f.write('ghi\n\n\n')
 
     cfg = CFG.format(token=f"@{ext}")
@@ -72,7 +72,7 @@ def test_token_relative(tmp_path:Path, get_config):
     """ Tests token from external file, relative path """
 
     ext = tmp_path / 'token.txt'
-    with open(ext, 'wt') as f:
+    with open(ext, 'wt', encoding='utf8') as f:
         f.write('jkl\n')
 
     cfg = CFG.format(token="@token.txt")
@@ -89,6 +89,6 @@ def test_tokenfile_missing(tmp_path:Path, get_config):
 
     cfg = CFG.format(token="@missing.txt")
     with pytest.raises(ConfigurationError) as e:
-        config = get_config(cfg, tmp_path) # type: ns.Namespace
+        get_config(cfg, tmp_path)
     assert e.value.args[0].startswith("Error reading token file")
 

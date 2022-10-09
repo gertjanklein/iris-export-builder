@@ -89,8 +89,6 @@ def setup_session(config:ns.Namespace):
     as part of the initialization.
     """
     
-    global tls
-
     svr = config.Server
     session = requests.Session()
     session.auth = (svr.user, svr.password)
@@ -126,7 +124,7 @@ def _init_thread(auth, cookie_data):
     if auth:
         tls.session.auth = auth
     if cookie_data:
-        jar = http.cookiejar.LWPCookieJar()
+        jar = http.cookiejar.LWPCookieJar() # type:ignore
         datastream = StringIO(cookie_data)
         jar._really_load(datastream, "<copy>", ignore_discard=True, ignore_expires=False)
         tls.session.cookies = jar

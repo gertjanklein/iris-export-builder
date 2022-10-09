@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import Sequence, Optional
+from typing import List, Optional
 
 import os
 from os.path import dirname, join, isabs, exists, splitext, basename
@@ -26,10 +26,10 @@ class ExportFile:
     filename:str
 
     # The items (in their 'repo' representation)
-    items:Sequence[RepositoryItem]
+    items:List[RepositoryItem]
 
     # The root element of the export to create
-    root:Optional[etree.Element]
+    root:Optional[etree._Element]
 
     
     def __init__(self, config, filename, items=None):
@@ -70,7 +70,7 @@ class ExportFile:
         return data
 
 
-    def create_export(self) -> etree.Element:
+    def create_export(self):
         """Create the export from the items in this object."""
         
         # Create root element for export
@@ -79,7 +79,6 @@ class ExportFile:
         root.tail = '\n'
 
         minver = maxver = 0
-        parser = etree.XMLParser(strip_cdata=False)
 
         # How to handle timestamps ('clear', 'update', 'leave')
         timestamps = self.config.Local.timestamps
@@ -95,17 +94,20 @@ class ExportFile:
             if item.kind == 'csp':
                 # CSP item is not wrapped in an Export element, add directly
                 assert isinstance(item, RepositoryCspItem)
-                logging.info(f'Adding {item.name} as app "{item.csp_application}", item "{item.csp_name}"')
+                logging.info('Adding %s as app "%s", item "%s"', item.name,
+                    item.csp_application, item.csp_name)
                 root.append(item_root)
                 continue
             
-            logging.info(f'Adding {item.name}')
+            logging.info('Adding %s', item.name)
             if 'version' in item_root.attrib:
                 version = int(item_root.attrib['version'])
 
                 # Save minimum and maximum version values
-                if not minver or minver > version: minver = version
-                if version > maxver: maxver = version
+                if not minver or minver > version:
+                    minver = version
+                if version > maxver:
+                    maxver = version
 
             # Handle item timestamps
             if timestamps == 'clear':
@@ -126,7 +128,7 @@ class ExportFile:
         root.attrib['version'] = str(ver)
 
 
-    def remove_timestamps(self, item_root:etree.Element):
+    def remove_timestamps(self, item_root:etree._Element):
         """Remove timestamp elements for classes in export."""
 
         tree = etree.ElementTree(item_root)
@@ -136,7 +138,7 @@ class ExportFile:
             el.getparent().remove(el)
 
 
-    def update_timestamp(self, item_root:etree.Element, horolog):
+    def update_timestamp(self, item_root:etree._Element, horolog):
         """Set timestamps for classes in export to modified time."""
 
         for el in item_root:
@@ -191,7 +193,7 @@ def get_files(config, repo):
             split = split_csp(config, name)
             if split is None:
                 continue
-            parser, item.csp_application, item.csp_name = split
+            _, item.csp_application, item.csp_name = split
             csp_export.items.append(item)
 
     return export_files
@@ -211,7 +213,7 @@ def get_export_name(config, repo_name):
     try:
         name = name.format(**replacements)
     except KeyError as e:
-        logging.warning(f"Warning: ignoring unrecognized replacement in outfile: {e.args[0]}\n")
+        logging.warning("Warning: ignoring unrecognized replacement in outfile: %s\n", e.args[0])
 
     # Interpret relative path relative to ini file location
     if not isabs(name):
@@ -232,9 +234,11 @@ def split_csp(config, name:str):
         match = re.fullmatch(parser.regex, name)
         if not match:
             if parser.nomatch != 'error':
-                logging.debug(f"Item {name} does not match regex in parser {i+1} ('{parser.regex}').")
+                logging.debug("Item %s does not match regex in parser %s ('%s').",
+                    name, i+1, parser.regex)
                 continue
-            raise ConfigurationError(f"Error: item {name} does not match regex in parser {i+1} ('{parser.regex}').")
+            msg = f"Error: item {name} does not match regex in parser {i+1} ('{parser.regex}')."
+            raise ConfigurationError(msg)
         app = parser.app
         for i, v in enumerate(match.groups()):
             if v is not None:

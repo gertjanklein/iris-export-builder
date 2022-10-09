@@ -42,7 +42,8 @@ DPL_NOTES_TPL = """
 """
 
 
-def add_deployment(config:ns.Namespace, name:str, root:etree.Element):
+def add_deployment(config:ns.Namespace, name:str, root:etree._Element):
+    """ Adds Ensemble deployment elements to root """
 
     # Get descriptions of items for export notes and Studio project
     items, projectitems = get_items_xml(name, root)
@@ -54,25 +55,30 @@ def add_deployment(config:ns.Namespace, name:str, root:etree.Element):
     docname = f"EnsExportProduction_{local_ts.replace(':','-')}"
     if config.Source.type == 'github':
         source = f"""GitHub tag '{config.GitHub.tag}'"""
-        notes = f"""<Line num="1">Created from GitHub tag '{config.GitHub.tag}' at {utc_ts} UTC.</Line>"""
+        notes = f'<Line num="1">Created from GitHub tag' \
+            f" '{config.GitHub.tag}' at {utc_ts} UTC.</Line>"
     else:
         source = f"""checkout directory '{name}'"""
-        notes = f"""<Line num="1">Created from checkout directory '{name}' at {utc_ts} UTC.</Line>"""
+        notes = f'<Line num="1">Created from checkout directory' \
+            f" '{name}' at {utc_ts} UTC.</Line>"
     machine = platform.node()
 
     # Add the name of the deployment to the project
-    projectitems.append(f'<ProjectItem name="EnsExportNotes.{docname}.PTD" type="PTD"></ProjectItem>')
+    projectitems.append(f'<ProjectItem name="EnsExportNotes.{docname}.PTD"' \
+        f' type="PTD"></ProjectItem>')
 
     # Create project element
     itemstxt = '\n'.join(projectitems)
-    data = PROJECT_TPL.format(name=docname, local_ts=local_ts, utc_ts=utc_ts, source=source, items=itemstxt)
+    data = PROJECT_TPL.format(name=docname, local_ts=local_ts,
+        utc_ts=utc_ts, source=source, items=itemstxt)
     el = etree.fromstring(data)
     el.tail = '\n\n'
     root.append(el)
     
     # Create deployment notes element
     itemstxt = '\n'.join(items)
-    data = DPL_NOTES_TPL.format(docname=docname, machine=machine, utc=utc_ts, notes=notes, items=itemstxt)
+    data = DPL_NOTES_TPL.format(docname=docname, machine=machine,
+        utc=utc_ts, notes=notes, items=itemstxt)
     parser = etree.XMLParser(strip_cdata=False)
     el = etree.fromstring(data, parser=parser)
     el.tail = '\n\n'
@@ -90,7 +96,8 @@ def get_timestamps():
     return utc_ts, local_ts
 
 
-def get_items_xml(name:str, root:etree.Element):
+def get_items_xml(name:str, root):
+    """ Get list of items in export root """
 
     items, projectitems = [], []
     

@@ -43,12 +43,16 @@ def test_has_timestamps(src_tree, tmp_path, get_build):
             continue
         
         # Make sure the TimeCreated element is present and resembles a $Horolog value
-        assert el.find('TimeCreated') is not None, "No TimeCreated element in class"
-        text = el.find('TimeCreated').text
-        assert dh.match(text), f"TimeCreated not in $Horolog format: '{text}'." 
+        tc = el.find('TimeCreated')
+        assert tc is not None, "No TimeCreated element in class"
+        text = tc.text
+        assert text is not None, "TimeCreated element has no contents"
+        assert dh.match(text), f"TimeCreated not in $Horolog format: '{text}'."
         
-        assert el.find('TimeChanged') is not None, "No TimeChanged element in class"
-        text = el.find('TimeChanged').text
+        tc = el.find('TimeChanged')
+        assert tc is not None, "No TimeChanged element in class"
+        text = tc.text
+        assert text is not None, "TimeChanged element has no contents"
         assert dh.match(text), f"TimeChanged not in $Horolog format: '{text}'." 
 
 
@@ -90,13 +94,13 @@ def test_leave_timestamps(src_tree, tmp_path, get_build):
         
         # Class c.cc had a timestamp and still should have
         elif el.attrib['name'] in ("tmp.c.cc",):
-            assert el.find('TimeCreated') is not None, "No TimeCreated element in class"
-            text = el.find('TimeCreated').text
-            assert text == '65958,79762.139', f"Unexpected value of TimeCreated: '{text}'." 
+            tc = el.find('TimeCreated')
+            assert tc is not None, "No TimeCreated element in class"
+            assert tc.text == '65958,79762.139', f"Unexpected value of TimeCreated: '{tc.text}'." 
             
-            assert el.find('TimeChanged') is not None, "No TimeChanged element in class"
-            text = el.find('TimeChanged').text
-            assert text == '65958,79762.139', f"Unexpected value of TimeCreated: '{text}'." 
+            tc = el.find('TimeChanged')
+            assert tc is not None, "No TimeChanged element in class"
+            assert tc.text == '65958,79762.139', f"Unexpected value of TimeCreated: '{tc.text}'." 
 
 
 @pytest.mark.usefixtures("reload_modules")

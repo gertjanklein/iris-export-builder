@@ -109,9 +109,12 @@ def check(config:ns.Namespace):
     ns.check_default(src, 'skip', [])
     
     # Strip leading slash if present, we don't need it
-    if src.srcdir == '/': src.srcdir = src.srcdir[1:]
-    if src.datadir == '/': src.datadir = src.datadir[1:]
-    if src.cspdir == '/': src.cspdir = src.cspdir[1:]
+    if src.srcdir == '/':
+        src.srcdir = src.srcdir[1:]
+    if src.datadir == '/':
+        src.datadir = src.datadir[1:]
+    if src.cspdir == '/':
+        src.cspdir = src.cspdir[1:]
 
     # Check Local section
     local = config.Local
@@ -208,7 +211,8 @@ def check_csp(config:ns.Namespace):
     if not csp.export == 'none':
         # Only check these if we are to export CSP files
         if ns.check_default(csp, 'parsers', []):
-            raise ConfigurationError("At least one [[CSP.parsers]] section for CSP items should be present.")
+            msg = "At least one [[CSP.parsers]] section for CSP items should be present."
+            raise ConfigurationError(msg)
         for i, parser in enumerate(csp.parsers):
             if not isinstance(parser, ns.Namespace):
                 raise ConfigurationError(f'Parser {i+1} must be a section.')
@@ -270,7 +274,8 @@ def setup_logging(config):
         logger.setLevel(loglevel.upper())
 
     # Log appends; create visible separation for this run
-    logging.info(f"\n\n===== Starting at {str(datetime.datetime.now()).split('.')[0]}")
+    now = str(datetime.datetime.now()).split('.')[0] # pylint:disable=use-maxsplit-arg
+    logging.info("\n\n===== Starting at %s", now)
     
 # =====
 
@@ -282,7 +287,8 @@ def unhandled_exception(exc_type, exc_value, exc_traceback):
         logging.error("\n%s", msg)
     else:
         msg = f"An error occurred; please see the log file for details.\n\n{exc_value}"
-        logging.exception("\n##### Unhandled exception:", exc_info=(exc_type, exc_value, exc_traceback))
+        exc_info = exc_type, exc_value, exc_traceback
+        logging.exception("\n##### Unhandled exception:", exc_info=exc_info)
     msgbox(msg, True)
     sys.exit(1)
 

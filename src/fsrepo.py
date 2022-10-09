@@ -1,7 +1,7 @@
 """Retrieve and parse a release from the filesystem."""
 
 from __future__ import annotations
-from typing import Sequence
+from typing import List, Sequence
 
 import os
 from os.path import join, split, relpath, getmtime
@@ -12,17 +12,23 @@ from repo import Repository, RepositorySourceItem, RepositoryCspItem, Repository
 
 
 def get_data(config):
+    """ Returns an FsRepo instance based on config """
+    
     repo = FsRepo(config)
     repo.get_names()
     return repo
 
 
 class FsRepo(Repository):
-    src_items:Sequence[FsRepoItem]
-    csp_items:Sequence[FsRepoCspItem]
-    data_items:Sequence[FsRepoDataItem]
+    """ Represents a filesystem repository """
+    
+    src_items:List[FsRepoItem]
+    csp_items:List[FsRepoCspItem]
+    data_items:List[FsRepoDataItem]
 
     def get_names(self):
+        """ Scans the filesystem and adds appropriate items """
+        
         dir = self.config.Directory.path
         self.name = split(dir)[-1]
 
@@ -65,11 +71,13 @@ class FsRepo(Repository):
                 self.src_items.append(FsRepoItem(base, name, encoding))
 
             else:
-                logging.debug(f"Skipping {name} as it's not in a configured directory.")
+                logging.debug("Skipping %s as it's not in a configured directory.", name)
 
 
     def list_files(self, dir):
-        for root, dirs, files in os.walk(dir):
+        """ Lists files in directory recursively """
+        
+        for root, _, files in os.walk(dir):
             relative = relpath(root, dir)
             if relative == '.':
                 relative = ''
@@ -78,6 +86,8 @@ class FsRepo(Repository):
 
 
 class FsRepoItem(RepositorySourceItem):
+    """ Represents a single item in a filesystem repository """
+    
     def __init__(self, base_dir, name, encoding):
         super().__init__()
         self.base_dir = base_dir

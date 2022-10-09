@@ -39,7 +39,7 @@ def test_unknown_replacement(src_tree, tmp_path):
 
     # Write to file
     cfgfile = str(tmp_path / 'cfg.toml')
-    with open(cfgfile, 'wt') as f:
+    with open(cfgfile, 'wt', encoding='utf8') as f:
         f.write(toml)
     
     # Create export
@@ -69,7 +69,7 @@ def test_create_output_dir(src_tree, tmp_path):
 
     # Write to file
     cfgfile = str(tmp_path / 'cfg.toml')
-    with open(cfgfile, 'wt') as f:
+    with open(cfgfile, 'wt', encoding='utf8') as f:
         f.write(toml)
     
     # Create export
