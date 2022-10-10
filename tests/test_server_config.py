@@ -61,7 +61,8 @@ def test_external_def_all(tmp_path:Path, get_config):
     """ Tests overriding server with external file """
 
     extdef = tmp_path / 'svr.toml'
-    settings = "host = '127.0.0.1'\n" \
+    settings = "[Server]\n" \
+        "host = '127.0.0.1'\n" \
         "port = '12345'\n" \
         "user = 'Asterix'\n" \
         "password = 'Obelix'\n" \
@@ -71,9 +72,7 @@ def test_external_def_all(tmp_path:Path, get_config):
     with open(extdef, 'wt', encoding='utf8') as f:
         f.write(settings)
 
-    override = f"[Server]\ntake_from = '{extdef}'"
-
-    cfg = get_config(f"{CFG}\n{override}", tmp_path) # type: ns.Namespace
+    cfg = get_config(f"{CFG}\naugment_from='{extdef}'", tmp_path)
     assert 'Server' in cfg, "No Server section"
     svr = cfg.Server
     assert isinstance(svr, ns.Namespace), "Server not a section"
@@ -94,37 +93,16 @@ def test_external_relative_location(tmp_path:Path, get_config):
     dir.mkdir(parents=True)
 
     extdef = dir / 'svr.toml'
-    settings = "host = '127.0.0.1'\n"
-    with open(extdef, 'wt', encoding='utf8') as f:
-        f.write(settings)
-
-    relpath = extdef.relative_to(tmp_path)
-    override = f"[Server]\ntake_from = '{relpath}'"
-
-    cfg = get_config(f"{CFG}\n{override}", tmp_path) # type: ns.Namespace
-    assert 'Server' in cfg, "No Server section"
-    svr = cfg.Server
-    assert isinstance(svr, ns.Namespace), "Server not a section"
-
-    assert svr.host == '127.0.0.1', f"Unexpected value for host: {svr.host}"
-
-
-@pytest.mark.usefixtures("reload_modules")
-def test_external_with_header(tmp_path:Path, get_config):
-    """ Tests external server definition with a section header """
-
-    extdef = tmp_path / 'svr.toml'
     settings = "[Server]\nhost = '127.0.0.1'\n"
     with open(extdef, 'wt', encoding='utf8') as f:
         f.write(settings)
 
-    override = "[Server]\ntake_from = 'svr.toml'"
+    relpath = extdef.relative_to(tmp_path)
+    override = f"augment_from = '{relpath}'"
 
-    cfg = get_config(f"{CFG}\n{override}", tmp_path) # type: ns.Namespace
+    cfg = get_config(f"{CFG}\n{override}", tmp_path)
     assert 'Server' in cfg, "No Server section"
     svr = cfg.Server
     assert isinstance(svr, ns.Namespace), "Server not a section"
 
     assert svr.host == '127.0.0.1', f"Unexpected value for host: {svr.host}"
-
-

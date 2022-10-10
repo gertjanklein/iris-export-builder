@@ -177,7 +177,8 @@ will be downloaded automatically.
   file containing the token. This can be useful to share the
   configuration file with others, without accidentally sharing a
   personal GitHub token. The path may be specified absolute, or relative
-  to the configuration file.
+  to the configuration file. Note that setting `augment_from` in section
+  `[Local]` can also be used to specify an external token.
 
 ## Section Directory
 
@@ -210,11 +211,6 @@ Configuration options are:
 
 * **https**: whether to use HTTPS to access the server; boolean, default
   is `false`.
-
-* **take_from**: file path (absolute or relative to the configuration
-  file) containing (part of) the server details. Anything in this file
-  will override the settings specified above. Not all settings need be
-  present; the `[Server]` section header is not needed but allowed.
 
 ## Section Local
 
@@ -272,3 +268,8 @@ where to log.
   storage definitions.
   
   For XML sources, this setting is usually best left empty.
+
+* **augment_from** (filename) specifies an external toml file to merge
+  into the current one. It can be used to specify settings used in
+  multiple toml files once. The toml file must have the same structure
+  as the regular one, but does not have to be complete.

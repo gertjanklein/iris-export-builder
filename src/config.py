@@ -43,6 +43,9 @@ def get_config() -> ns.Namespace:
     levels = 'debug,info,warning,error,critical'.split(',')
     ns.check_oneof(local, 'loglevel', levels, 'info')
 
+    # Merge-in setting from the file specified in augment_from, if any
+    merge_augmented_settings(config)
+
     # Do final setup of logging
     setup_logging(config)
 
@@ -77,6 +80,27 @@ def get_config() -> ns.Namespace:
 
 
 # =====
+
+def merge_augmented_settings(config:ns.Namespace):
+    """ Merges settings from file in setting augment_from, if any """
+    
+    local = ns.get_section(config, 'Local')
+    if local is None:
+        return
+    fname = local._get('augment_from')
+    if fname is None:
+        return
+    if not isabs(fname):
+        fname = join(config.cfgdir, fname)
+    if not exists(fname):
+        raise ConfigurationError(f"augment_from file {local._get('augment_from')} not found")
+    cs = ns.dict2ns(toml.load(fname))
+    if (aug_local := ns.get_section(cs, 'Local')) and 'augment_from' in aug_local:
+        raise ConfigurationError("Recursive augment_from not supported")
+    # Add/override each key/value in augment_from
+    for k, v in cs._flattened():
+        ns.set_in_path(config, k, v)
+
 
 def merge_overrides(args:argparse.Namespace, config:ns.Namespace):
     """Merge command line overrides into configuration"""
@@ -162,7 +186,7 @@ def check(config:ns.Namespace):
     # Check server configuration
     if src.srctype == 'udl':
         check_server(config)
-        
+
 
 def check_server(config):
     """ Check UDL -> XML server configuration """
@@ -180,28 +204,11 @@ def check_server(config):
     ns.check_default(svr, 'password', 'SYS')
     ns.check_default(svr, 'namespace', 'USER')
     ns.check_default(svr, 'https', False)
-
-    # Is an external definition file specified?
-    if not (take_from := svr._get('take_from')):
-        return
     
-    # Make file path absolute, if not already so
-    if not isabs(take_from):
-        take_from = join(config.cfgdir, take_from)
-    
-    # Load the server specification from the file
-    ext_svr = ns.dict2ns(toml.load(take_from))
+    if 'take_from' in svr:
+        raise ConfigurationError("Setting take_from no longer supported." \
+            " Use augment_from in section Local instead.")
 
-    # Allow, but don't require, a [Server] section header
-    if 'Server' in ext_svr and isinstance(ext_svr.Server, ns.Namespace):
-        ext_svr = ext_svr.Server
-
-    # Overwrite default settings with what's in the external file
-    for prop in 'host,port,user,password,namespace,https'.split(','):
-        if not prop in ext_svr:
-            continue
-        svr[prop] = ext_svr[prop]
-        
 
 def check_csp(config:ns.Namespace):
     """ Checks the CSP configuration """

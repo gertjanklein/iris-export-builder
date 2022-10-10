@@ -81,10 +81,6 @@ path = ''
 ##### Server connection details: the server to use to convert UDL to XML.
 [Server]
 
-# Filename to take the settings from. Merges with (and overrides) settings
-# defined here. Does not need, but may use, [Server] section header.
-#take_from = 'server.toml'
-
 # Hostname or IP address, default 'localhost'
 #host = ''
 # Caché/IRIS internal web server port, default '52773'
@@ -122,3 +118,5 @@ timestamps = 'leave'
 # Force override of export version. Either 25 (Cache) or 26 (IRIS).
 export_version = ''
 
+# Augment/override settings in this file with the one specified here.
+augment_from = ''
