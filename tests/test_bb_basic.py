@@ -35,6 +35,7 @@ def test_basic(tmpdir, server_toml, get_build, validate_schema):
     validate_schema(export)
     
 
+@pytest.mark.usefixtures("reload_modules")
 def test_name_as_tag(tmpdir, server_toml, build):
     """Tests using tag in output file name"""
     
