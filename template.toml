@@ -5,7 +5,7 @@
 ##### Details about the source files
 [Source]
 
-# The type of location: 'directory' or 'github'
+# The type of location: 'directory', 'github' or 'bitbucket'
 type = 'github'
 
 # The encoding of the source files, e.g. UTF-8 (default) or CP1252.
@@ -69,6 +69,21 @@ tag = 'master'
 # GitHub security token to use, if needed.
 # Prefix with @ to specify a file containing the token.
 token = ''
+
+
+##### Bitbucket details
+[Bitbucket]
+
+# Repository owner and name
+owner = ''
+repo = ''
+
+# Username and app password, if needed
+user = ''
+token = ''
+
+# Tag/branch/commit id  to create an export for.
+tag = 'master'
 
 
 ##### Details about the directory containing the source files

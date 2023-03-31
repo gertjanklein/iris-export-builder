@@ -75,6 +75,8 @@ def get_repo(config):
 
     if config.Source.type == 'github':
         from github import get_data
+    elif config.Source.type == 'bitbucket':
+        from bitbucket import get_data
     elif config.Source.type == 'directory':
         from fsrepo import get_data
     else:

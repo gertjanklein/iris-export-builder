@@ -122,7 +122,7 @@ def check(config:ns.Namespace):
     
     # Check Source
     src = config.Source
-    ns.check_oneof(src, 'type', ('github', 'directory'))
+    ns.check_oneof(src, 'type', ('github', 'bitbucket', 'directory'))
     ns.check_oneof(src, 'srctype', ('xml', 'udl'), 'udl')
     ns.check_encoding(src, 'encoding', 'UTF-8')
     
@@ -175,6 +175,14 @@ def check(config:ns.Namespace):
             del config.Directory.structure
         if not isabs(config.Directory.path):
             config.Directory.path = join(abspath(config.cfgdir), config.Directory.path)
+    elif src.type == 'bitbucket':
+        ns.check_section(config, 'Bitbucket')
+        bb = config.Bitbucket
+        ns.check_notempty(bb, 'owner')
+        ns.check_notempty(bb, 'repo')
+        ns.check_notempty(bb, 'tag')
+        ns.check_default(config.Bitbucket, 'token', '')
+        ns.check_default(config.Bitbucket, 'user', '')
     else:
         ns.check_section(config, 'GitHub')
         gh = config.GitHub
