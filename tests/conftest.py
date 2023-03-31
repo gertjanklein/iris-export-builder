@@ -54,6 +54,22 @@ def get_config():
 
 
 @pytest.fixture
+def build():
+    def build(toml:str, tmp_path):
+        """Build using the toml config passed in."""
+        
+        cfgfile = str(tmp_path / 'cfg.toml')
+        with open(cfgfile, 'wt', encoding='UTF-8') as f:
+            f.write(toml)
+        
+        args = ['builder', cfgfile, '--no-gui']
+        with patch('sys.argv', args):
+            builder.main()
+        
+    return build
+
+
+@pytest.fixture
 def get_build():
     def get_build(toml:str, tmp_path):
         """Retrieves a build using the toml config passed in."""

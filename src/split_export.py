@@ -204,10 +204,18 @@ def get_export_name(config, repo_name):
 
     ts = datetime.datetime.now().strftime('%Y-%m-%dT%H-%M')
     cfgname = splitext(basename(config.cfgfile))[0]
+    if config.Source.type == 'github':
+        tag = config.GitHub.tag
+    elif config.Source.type == 'bitbucket':
+        tag = config.Bitbucket.tag
+    else:
+        tag = ''
+    
     replacements = {
         'name': repo_name,
         'timestamp': ts,
-        'cfgname': cfgname }
+        'cfgname': cfgname,
+        'tag': tag }
 
     name = config.Local.outfile
     try:

@@ -1,3 +1,4 @@
+from os.path import exists
 from importlib import import_module
 
 from typing import Any
@@ -18,18 +19,29 @@ owner = "gertjanklein"
 repo = "iris-export-builder_test-data"
 tag = "main"
 [Local]
-outfile = 'out.xml'
+outfile = '{outfile}'
 """
 
 
 @pytest.mark.usefixtures("reload_modules")
 def test_basic(tmpdir, server_toml, get_build, validate_schema):
-    """Retrieve and build specific packge."""
+    """Retrieve and build specific package."""
     
     if not server_toml:
         pytest.skip("No XML -> UDL server found.")
     
-    cfg = CFG.format(deployment='false') + "\nthreads=1\n" + server_toml
+    cfg = CFG.format(outfile='out.xml') + server_toml
     export = get_build(cfg, tmpdir)
     validate_schema(export)
     
+
+def test_name_as_tag(tmpdir, server_toml, build):
+    """Tests using tag in output file name"""
+    
+    if not server_toml:
+        pytest.skip("No XML -> UDL server found.")
+    
+    cfg = CFG.format(outfile='{tag}.xml') + server_toml
+    build(cfg, tmpdir)
+    
+    assert exists(tmpdir / 'main.xml'), "Output has expected name"

@@ -113,7 +113,7 @@ path = ''
 [Local]
 
 # File to place output in. Supports escapes:
-# {name}: top-level directory in filesystem or GitHub zip
+# {name}: top-level directory in filesystem or GitHub/Bitbucket zip
 # {cfgname}: name (without extension) of configuration file
 # {timestamp}: Current date/time in format YYYY-MM-DDThh-mm
 outfile = '{name}.xml'
