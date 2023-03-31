@@ -115,6 +115,7 @@ path = ''
 # File to place output in. Supports escapes:
 # {name}: top-level directory in filesystem or GitHub/Bitbucket zip
 # {cfgname}: name (without extension) of configuration file
+# {tag}: the download tag as specified under GitHub/Bitbucket
 # {timestamp}: Current date/time in format YYYY-MM-DDThh-mm
 outfile = '{name}.xml'
 

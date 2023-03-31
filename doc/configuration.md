@@ -12,6 +12,7 @@ There are several configuration sections in the file:
 * [CSP](#section-csp): how to handle CSP files (if any)
 * [Data](#section-data): how to handle data files (if any)
 * [GitHub](#section-github): how to handle sources on GitHub
+* [Bitbucket](#section-bitbucket): how to handle sources on Bitbucket
 * [Directory](#section-directory): how to handle sources on the
   filesystem
 * [Server](#section-server): details about the UDL to XML conversion
@@ -21,7 +22,8 @@ There are several configuration sections in the file:
 ## Section Source
 
 * **type**: the location of the sources; can be `'github'` (configured
-  under [GitHub](#section-github)) or `'directory'` (configured under
+  under [GitHub](#section-github)), `'bitbucket'` (configured under
+  [Bitbucket](#section-bitbucket)), or `'directory'` (configured under
   [Directory](#section-directory)).
 
 * **encoding**: the encoding of the sources. Should normally be `'UTF-8'`
@@ -180,6 +182,23 @@ will be downloaded automatically.
   to the configuration file. Note that setting `augment_from` in section
   `[Local]` can also be used to specify an external token.
 
+## Section Bitbucket
+
+This section describes where to find sources located on Bitbucket. They
+will be downloaded automatically.
+
+* **owner**: the Bitbucket repository owner
+
+* **repo**: the Bitbucket repository name
+
+* **tag**: the tag to get the sources for. This may be anything that
+  Bitbucket supports, i.e. a tag, branch name, commit id, etc.
+
+* **user** and **token**: if the Bitbucket repository is private,
+  specify the username and [app
+  password](https://support.atlassian.com/bitbucket-cloud/docs/create-an-app-password/)
+  here. The app password only needs `Repositories:Read` permissions.
+
 ## Section Directory
 
 If sources are to be found in a filesystem directory, this section
@@ -221,9 +240,12 @@ where to log.
   supporting a few replacements:
 
   * `{name}`: will be replaced with the top-level directory in the
-    filesystem or GitHub zip.
+    filesystem or GitHub/Bitbucket zip.
   * `{cfgname}`: will be replaced with the name (without extension) of the
     configuration file.
+  * `{tag}`: will be replaced with the tag as configured in the GitHub
+    or Bitbucket section. This is mostly useful with Bitbucket, where
+    `{name}` will always be a commit id.
   * `{timestamp}`: will be replaced with the current date/time in format
     `YYYY-MM-DDThh-mm`.
 
@@ -256,8 +278,8 @@ where to log.
   * `'leave'`: don't add or remove timestamps, leave them as they are.
     This is the default.
   
-  UDL sources from GitHub don't have timestamps, but they get one from
-  the UDL to XML conversion. These are always stripped.
+  UDL sources from GitHub/Bitbucket don't have timestamps, but they get
+  one from the UDL to XML conversion. These are always stripped.
 
 * **export_version**: specifies the version to use in the generated
   export file. Possible values are `25` (Cache) and `26` (IRIS). This is
