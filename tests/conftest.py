@@ -31,7 +31,6 @@ def reload_modules():
     # Close any handlers in the logging module
     builder.cleanup_logging()
     reload(sys.modules['logging'])
-    reload(sys.modules['config'])
     reload(sys.modules['build-export'])
 
 

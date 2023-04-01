@@ -332,11 +332,13 @@ ARGS = [
     {
         'name': 'github_tag',
         'path': 'GitHub.tag',
-        'argparse': {
-            'names': ["--github-tag"],
-            'default': '',
-            'help': "Override tag/branch to retrieve on GitHub"
-        }
+        'argparse': (
+            ["--github-tag"],
+            {
+                'default': '',
+                'help': "Override tag/branch to retrieve on GitHub"
+            }
+        )
     }
 ]
 
@@ -351,8 +353,7 @@ def parse_args():
     
     # Add command line overrides
     for arg in ARGS:
-        kwargs = arg['argparse']
-        names = kwargs.pop('names')
+        names, kwargs = arg['argparse']
         parser.add_argument(*names, **kwargs)
 
     # Replace stdout/stderr to capture argparse output
