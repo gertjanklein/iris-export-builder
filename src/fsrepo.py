@@ -77,7 +77,8 @@ class FsRepo(Repository):
     def list_files(self, dir):
         """ Lists files in directory recursively """
         
-        for root, _, files in os.walk(dir):
+        for root, dirnames, files in os.walk(dir):
+            dirnames[:] = [ n for n in dirnames if not n.startswith('.') ]
             relative = relpath(root, dir)
             if relative == '.':
                 relative = ''
