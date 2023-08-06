@@ -295,3 +295,8 @@ where to log.
   into the current one. It can be used to specify settings used in
   multiple toml files once. The toml file must have the same structure
   as the regular one, but does not have to be complete.
+
+* **sort**: a boolean (default `false`) indicating whether the items in
+  the export should be sorted alphabetically. This can be useful for
+  comparing exports from different sources, e.g. one created from a
+  GitHub commit, with another one from a local (filesystem) repository.

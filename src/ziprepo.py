@@ -37,7 +37,7 @@ class ZipRepo(Repository):
         if base[-1] == '/':
             base = base[:-1]
         self.name = base
-
+        
         # Process subsequent items
         for item in zip_items[1:]:
             name = item.filename
@@ -73,6 +73,12 @@ class ZipRepo(Repository):
                 if not '.' in parts[-1]:
                     continue
                 self.src_items.append(ZipRepoItem(self.zip, item, srcdir, encoding))
+        
+        if self.config.Local.sort:
+            self.src_items.sort()
+            self.csp_items.sort()
+            self.data_items.sort()
+            
 
 
 class ZipRepoItem(RepositorySourceItem):

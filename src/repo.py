@@ -66,6 +66,9 @@ class RepositoryItem:
         """ Returns a $horolog-type timestamp for this item, if known. """
         return None
     
+    def __lt__(self, other):
+        return self.name.lower() < other.name.lower()
+    
 
 class RepositorySourceItem(RepositoryItem):
     kind = 'src'

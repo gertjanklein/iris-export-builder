@@ -72,9 +72,15 @@ class FsRepo(Repository):
 
             else:
                 logging.debug("Skipping %s as it's not in a configured directory.", name)
-
-
-    def list_files(self, dir):
+    
+        if self.config.Local.sort:
+            self.src_items.sort()
+            self.csp_items.sort()
+            self.data_items.sort()
+            
+    
+    @staticmethod
+    def list_files(dir):
         """ Lists files in directory recursively """
         
         for root, dirnames, files in os.walk(dir):

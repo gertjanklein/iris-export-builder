@@ -147,6 +147,7 @@ def check(config:ns.Namespace):
     ns.check_default(local, 'logdir', '')
     ns.check_default(local, 'loglevel', '')
     ns.check_default(local, 'threads', 1)
+    ns.check_default(local, 'sort', False)
     ns.check_oneof(local, 'timestamps', ('clear', 'update', 'leave'), 'leave')
     ns.check_oneof(local, 'export_version', (25, 26, '', None), '')
     if local.export_version == '':
