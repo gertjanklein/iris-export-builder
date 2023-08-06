@@ -1,4 +1,4 @@
-
+from pathlib import Path
 from unittest.mock import patch
 
 import pytest
@@ -46,7 +46,7 @@ def test_sort_fs(src_tree, get_config):
     files.insert(0, files.pop())
     
     # Confirm the last item is now the first
-    assert files[0] == 'src\\Include.inc.xml'
+    assert Path(files[0]) == Path('src/Include.inc.xml')
     
     # Get the repo using this no longer sorted input
     with patch('fsrepo.FsRepo.list_files') as mock_list_files:
