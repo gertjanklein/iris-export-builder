@@ -96,7 +96,7 @@ class ZipRepoItem(RepositorySourceItem):
         parts = self.info.filename.split('/')[1:]
         if parts[0] == self.prefix:
             parts = parts[1:]
-        return '.'.join(parts)
+        return '/'.join(parts)
 
     @property
     def data(self):
