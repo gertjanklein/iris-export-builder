@@ -108,6 +108,7 @@ class RepositoryCspItem(RepositoryItem):
             name = 'CSP'
             data = etree.CDATA('\n'+ self.data)
         else:
+            assert isinstance(self.data, bytes)
             name = 'CSPBase64'
             data = b'\n'+ base64.encodebytes(self.data)
         
