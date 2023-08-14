@@ -62,7 +62,8 @@ def _convert_to_xml(config, item):
     data = item.data.encode('UTF-8')
 
     svr = config.Server
-    url = f"http://{svr.host}:{svr.port}/api/atelier/v1/{svr.namespace}/cvt/doc/xml"
+    proto = 'https' if svr.https else 'http'
+    url = f"{proto}://{svr.host}:{svr.port}/api/atelier/v1/{svr.namespace}/cvt/doc/xml"
     
     # Get and convert from JSON
     rsp = tls.session.post(url, data=data, headers={'Content-Type': 'text/plain; charset=utf-8'})
