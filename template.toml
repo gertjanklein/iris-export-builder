@@ -119,7 +119,7 @@ path = ''
 # {timestamp}: Current date/time in format YYYY-MM-DDThh-mm
 outfile = '{name}.xml'
 
-# Whether to create an Ensemble deployment file.
+# Whether to create an Ensemble deployment file (default: false).
 deployment = false
 
 # Directory for the log file.
@@ -133,6 +133,9 @@ timestamps = 'leave'
 
 # Force override of export version. Either 25 (Cache) or 26 (IRIS).
 export_version = ''
+
+# Whether to sort items in the export file (default: false)
+sort = false
 
 # Augment/override settings in this file with the one specified here.
 augment_from = ''
