@@ -69,6 +69,12 @@ class RepositoryItem:
     def __lt__(self, other):
         return self.name.lower() < other.name.lower()
     
+    def __str__(self):
+        return self.name
+    
+    def __repr__(self) -> str:
+        return f"<{self.__class__.__name__} name='{self.name}'>"
+    
 
 class RepositorySourceItem(RepositoryItem):
     kind = 'src'
