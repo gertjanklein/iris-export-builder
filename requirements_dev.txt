@@ -3,6 +3,7 @@ toml
 lxml
 requests
 docker-compose
+pyinstaller
 pylint
 pytest
 pytest-docker
