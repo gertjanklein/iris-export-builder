@@ -38,7 +38,7 @@ def test_export_version_25(server_toml, tmp_path, src_tree_udl, get_build):
     # Check export is valid and contains class
     tree = etree.parse(BytesIO(export))
     assert tree.docinfo.root_name == 'Export'
-    assert tree.find('/Class[@name="tmp.a"]') is not None, "tmp.a not in export"
+    assert tree.find('./Class[@name="tmp.a"]') is not None, "tmp.a not in export"
     
     root = tree.getroot()
     assert root.attrib['version'] == '25', "Version not 25"
@@ -61,7 +61,7 @@ def test_export_version_26(server_toml, tmp_path, src_tree_udl, get_build):
     # Check export is valid and contains class
     tree = etree.parse(BytesIO(export))
     assert tree.docinfo.root_name == 'Export'
-    assert tree.find('/Class[@name="tmp.a"]') is not None, "tmp.a not in export"
+    assert tree.find('./Class[@name="tmp.a"]') is not None, "tmp.a not in export"
     
     root = tree.getroot()
     assert root.attrib['version'] == '26', "Version not 26"

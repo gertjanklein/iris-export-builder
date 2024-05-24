@@ -83,8 +83,8 @@ def test_data_separate(server_toml, tmp_path, src_tree_udl, get_build):
     # Check export is valid and contains class and data
     tree = etree.parse(BytesIO(export))
     assert tree.docinfo.root_name == 'Export'
-    assert tree.find('/Class[@name="tmp.a"]') is not None, "tmp.a not in export"
-    assert tree.find('/Document[@name="Test.LUT"]') is not None, "Test.LUT not in export"
+    assert tree.find('./Class[@name="tmp.a"]') is not None, "tmp.a not in export"
+    assert tree.find('./Document[@name="Test.LUT"]') is not None, "Test.LUT not in export"
 
 
 @pytest.mark.usefixtures("reload_modules")
@@ -107,8 +107,8 @@ def test_data_separate_threads(server_toml, tmp_path, src_tree_udl, get_build):
     # Check export is valid and contains class and data
     tree = etree.parse(BytesIO(export))
     assert tree.docinfo.root_name == 'Export'
-    assert tree.find('/Class[@name="tmp.a"]') is not None, "tmp.a not in export"
-    assert tree.find('/Document[@name="Test.LUT"]') is not None, "Test.LUT not in export"
+    assert tree.find('./Class[@name="tmp.a"]') is not None, "tmp.a not in export"
+    assert tree.find('./Document[@name="Test.LUT"]') is not None, "Test.LUT not in export"
 
 
 @pytest.mark.usefixtures("reload_modules")

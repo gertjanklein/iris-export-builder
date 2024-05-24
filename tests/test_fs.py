@@ -39,8 +39,8 @@ def test_subpath_all(tmp_path, get_build):
 
     tree = etree.parse(BytesIO(export))
     assert tree.docinfo.root_name == 'Export'
-    assert tree.find('/Class[@name="tmp.cls1"]') is not None, "tmp.cls1 not in export"
-    assert tree.find('/Class[@name="tmp.cls2"]') is not None, "tmp.cls2 not in export"
+    assert tree.find('./Class[@name="tmp.cls1"]') is not None, "tmp.cls1 not in export"
+    assert tree.find('./Class[@name="tmp.cls2"]') is not None, "tmp.cls2 not in export"
 
 
 @pytest.mark.usefixtures("reload_modules", "create_src_tree")
@@ -50,8 +50,8 @@ def test_subpath_a(tmp_path, get_build):
 
     tree = etree.parse(BytesIO(export))
     assert tree.docinfo.root_name == 'Export'
-    assert tree.find('/Class[@name="tmp.cls1"]') is not None, "tmp.cls1 not in export"
-    assert tree.find('/Class[@name="tmp.cls2"]') is None, "tmp.cls2 in export"
+    assert tree.find('./Class[@name="tmp.cls1"]') is not None, "tmp.cls1 not in export"
+    assert tree.find('./Class[@name="tmp.cls2"]') is None, "tmp.cls2 in export"
 
 
 @pytest.mark.usefixtures("reload_modules", "create_src_tree")
@@ -61,8 +61,8 @@ def test_subpath_b(tmp_path, get_build):
 
     tree = etree.parse(BytesIO(export))
     assert tree.docinfo.root_name == 'Export'
-    assert tree.find('/Class[@name="tmp.cls1"]') is None, "tmp.cls1 in export"
-    assert tree.find('/Class[@name="tmp.cls2"]') is not None, "tmp.cls2 not in export"
+    assert tree.find('./Class[@name="tmp.cls1"]') is None, "tmp.cls1 in export"
+    assert tree.find('./Class[@name="tmp.cls2"]') is not None, "tmp.cls2 not in export"
 
 
 # =====

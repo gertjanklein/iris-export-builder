@@ -56,25 +56,25 @@ def test_all_types(src_tree_zipped, tmp_path, get_config):
     # Make sure everything we expect is there
     assert tree.docinfo.root_name == 'Export'
 
-    assert tree.find('/Class[@name="tmp.a"]') is not None, "tmp.a not in export"
-    assert tree.find('/Class[@name="tmp.b"]') is not None, "tmp.b not in export"
-    assert tree.find('/Class[@name="tmp.c.cc"]') is not None, "tmp.c.cc not in export"
+    assert tree.find('./Class[@name="tmp.a"]') is not None, "tmp.a not in export"
+    assert tree.find('./Class[@name="tmp.b"]') is not None, "tmp.b not in export"
+    assert tree.find('./Class[@name="tmp.c.cc"]') is not None, "tmp.c.cc not in export"
     
-    assert tree.find('/Routine[@name="Include"][@type="INC"]') is not None, \
+    assert tree.find('./Routine[@name="Include"][@type="INC"]') is not None, \
         "Routine.inc not in export"
 
-    assert tree.find('/CSP[@name="hello.csp"]') is not None, "hello.csp not in export"
-    assert tree.find('/CSP[@name="goodbye.csp"]') is not None, "goodbye.csp not in export"
-    assert tree.find('/CSPBase64[@name="binary.bin"]') is not None, "binary.bin not in export"
-    assert tree.find('/CSPBase64[@name="dat"]') is not None, "dat not in export or not binary"
+    assert tree.find('./CSP[@name="hello.csp"]') is not None, "hello.csp not in export"
+    assert tree.find('./CSP[@name="goodbye.csp"]') is not None, "goodbye.csp not in export"
+    assert tree.find('./CSPBase64[@name="binary.bin"]') is not None, "binary.bin not in export"
+    assert tree.find('./CSPBase64[@name="dat"]') is not None, "dat not in export or not binary"
     
-    assert tree.find('/Document[@name="Test.LUT"]') is not None, "Test.LUT not in export"
-    assert tree.find('/Document[@name="Test.LUT"]/lookupTable/entry[@table="Test"]') is not None, \
+    assert tree.find('./Document[@name="Test.LUT"]') is not None, "Test.LUT not in export"
+    assert tree.find('./Document[@name="Test.LUT"]/lookupTable/entry[@table="Test"]') is not None, \
         "Test entry of lookup table not in export"
 
-    assert tree.find('/Document[@name="Ens.Config.DefaultSettings.esd"]') is not None, \
+    assert tree.find('./Document[@name="Ens.Config.DefaultSettings.esd"]') is not None, \
         "Ens.Config.DefaultSettings.esd not in export"
-    path = '/Document[@name="Ens.Config.DefaultSettings.esd"]/defaultSettings/item/[@item="Test"]'
+    path = './Document[@name="Ens.Config.DefaultSettings.esd"]/defaultSettings/item/[@item="Test"]'
     assert tree.find(path) is not None, "Test default setting not in export"
 
 
@@ -100,7 +100,7 @@ def test_skip(src_tree_zipped, tmp_path, get_config):
     assert tree.docinfo.root_name == 'Export'
 
     # Make sure the things we skipped are not in the export
-    assert tree.find('/CSP[@name="hello.csp"]') is None, "hello.csp in export"
-    assert tree.find('/Document[@name="Test.LUT"]') is None, "Test.LUT in export"
-    assert tree.find('/Class[@name="tmp.a"]') is None, "tmp.a in export"
+    assert tree.find('./CSP[@name="hello.csp"]') is None, "hello.csp in export"
+    assert tree.find('./Document[@name="Test.LUT"]') is None, "Test.LUT in export"
+    assert tree.find('./Class[@name="tmp.a"]') is None, "tmp.a in export"
 
