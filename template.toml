@@ -134,8 +134,12 @@ timestamps = 'leave'
 # Force override of export version. Either 25 (Cache) or 26 (IRIS).
 export_version = ''
 
-# Whether to sort items in the export file (default: false)
+# Whether to sort items in the export file (default: false).
 sort = false
+
+# How to convert UDL to XML: 'iris' (the default, uses the server
+# specified under [Server]) or 'builtin'.
+converter = 'iris'
 
 # Augment/override settings in this file with the one specified here.
 augment_from = ''

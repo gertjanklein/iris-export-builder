@@ -233,8 +233,8 @@ Configuration options are:
 
 ## Section Local
 
-This section specifies where to create the export file, and what and
-where to log.
+This section specifies where to create the export file, what and
+where to log, and configures various miscellaneous settings.
 
 * **outfile**: the name of the output file to create. This is a string
   supporting a few replacements:
@@ -291,12 +291,16 @@ where to log.
   
   For XML sources, this setting is usually best left empty.
 
-* **augment_from** (filename) specifies an external toml file to merge
-  into the current one. It can be used to specify settings used in
-  multiple toml files once. The toml file must have the same structure
-  as the regular one, but does not have to be complete.
-
 * **sort**: a boolean (default `false`) indicating whether the items in
   the export should be sorted alphabetically. This can be useful for
   comparing exports from different sources, e.g. one created from a
   GitHub commit, with another one from a local (filesystem) repository.
+
+* **converter**: how to convert UDL sources to XML. Can be `iris` (the
+  default), which uses the IRIS server specified in the `[Server]`
+  section, or `builtin`, which uses a built-in converter.
+
+* **augment_from** (filename) specifies an external toml file to merge
+  into the current one. It can be used to specify settings used in
+  multiple toml files once. The toml file must have the same structure
+  as the regular one, but does not have to be complete.

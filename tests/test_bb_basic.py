@@ -28,9 +28,10 @@ def test_basic(tmpdir, server_toml, get_build, validate_schema):
     """Retrieve and build specific package."""
     
     if not server_toml:
-        pytest.skip("No XML -> UDL server found.")
+        cfg = CFG.format(outfile='out.xml') + "converter='builtin'\n"
+    else:
+        cfg = CFG.format(outfile='out.xml') + server_toml
     
-    cfg = CFG.format(outfile='out.xml') + server_toml
     export = get_build(cfg, tmpdir)
     validate_schema(export)
     
@@ -40,9 +41,10 @@ def test_name_as_tag(tmpdir, server_toml, build):
     """Tests using tag in output file name"""
     
     if not server_toml:
-        pytest.skip("No XML -> UDL server found.")
+        cfg = CFG.format(outfile='{tag}.xml') + "converter='builtin'\n"
+    else:
+        cfg = CFG.format(outfile='{tag}.xml') + server_toml
     
-    cfg = CFG.format(outfile='{tag}.xml') + server_toml
     build(cfg, tmpdir)
     
     assert exists(tmpdir / 'main.xml'), "Output has expected name"

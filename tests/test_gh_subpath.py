@@ -31,9 +31,10 @@ def test_subpath_all(tmp_path, server_toml, get_build):
     Checks that all expected classes are there."""
 
     if not server_toml:
-        pytest.skip("No XML -> UDL server found.")
+        cfg = CFG.format(srcdir='src') + "converter='builtin'\n"
+    else:
+        cfg = CFG.format(srcdir='src') + "\n" + server_toml
     
-    cfg = CFG.format(srcdir='src') + "\n" + server_toml
     export = get_build(cfg, tmp_path)
 
     tree = etree.parse(BytesIO(export))
@@ -51,9 +52,10 @@ def test_subpath(tmp_path, server_toml, get_build):
     Sources not in that path should not be present in the export."""
     
     if not server_toml:
-        pytest.skip("No XML -> UDL server found.")
+        cfg = CFG.format(srcdir='src/dc/Sample/REST') + "converter='builtin'\n"
+    else:
+        cfg = CFG.format(srcdir='src/dc/Sample/REST') + "\n" + server_toml
     
-    cfg = CFG.format(srcdir='src/dc/Sample/REST') + "\n" + server_toml
     export = get_build(cfg, tmp_path)
 
     tree = etree.parse(BytesIO(export))

@@ -34,7 +34,7 @@ def test_build(tmpdir, server_toml, get_build, validate_schema):
     if not server_toml:
         pytest.skip("No XML -> UDL server found.")
     
-    cfg = CFG.format(deployment='false') + "\nthreads=1\n" + server_toml
+    cfg = CFG.format(deployment='false') + "\nthreads=1\nconverter='iris'\n" + server_toml
     export = get_build(cfg, tmpdir)
     validate_schema(export)
     # Check binary equality

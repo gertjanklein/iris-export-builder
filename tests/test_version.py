@@ -27,11 +27,11 @@ def test_export_version_25(server_toml, tmp_path, src_tree_udl, get_build):
     """ Test conversion with export version override 25
     """
 
-    if not server_toml:
-        pytest.skip("No XML -> UDL server found.")
-    
     cfg = CFG.format(path=src_tree_udl, srcdir='', datadir='')
-    cfg = f"{cfg}\nexport_version=25\n{server_toml}"
+    if not server_toml:
+        cfg = f"{cfg}\nexport_version=25\nconverter='builtin'\n"
+    else:
+        cfg = f"{cfg}\nexport_version=25\n{server_toml}"
 
     export = get_build(cfg, tmp_path)
     
@@ -50,12 +50,12 @@ def test_export_version_26(server_toml, tmp_path, src_tree_udl, get_build):
     """ Test conversion with export version override 26
     """
 
-    if not server_toml:
-        pytest.skip("No XML -> UDL server found.")
-    
     cfg = CFG.format(path=src_tree_udl, srcdir='', datadir='')
-    cfg = f"{cfg}\nexport_version=26\n{server_toml}"
-
+    if not server_toml:
+        cfg = f"{cfg}\nexport_version=26\nconverter='builtin'\n"
+    else:
+        cfg = f"{cfg}\nexport_version=26\n{server_toml}"
+    
     export = get_build(cfg, tmp_path)
     
     # Check export is valid and contains class

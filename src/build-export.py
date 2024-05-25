@@ -2,10 +2,12 @@ from __future__ import annotations
 
 import logging
 
+import namespace as ns
+import udl2xml.main
+
 from config import get_config, ConfigurationError, msgbox
 from split_export import get_files, ExportFile
 from repo import RepositorySourceItem
-from convert import setup_session, cleanup as cleanup_convert, convert
 from deployment import add_deployment
 
 
@@ -24,14 +26,16 @@ def run(config, repo):
     
     # Setup basic auth handler for IRIS, if we need to convert UDL to XML
     if config.Source.srctype == 'udl':
-        setup_session(config)
+        cvt, cvt_setup, cvt_cleanup = get_converter(config)
+        if cvt_setup:
+            cvt_setup(config)
 
     # Get list of files to create, with their items
     files = get_files(config, repo)
 
     # Convert item data from UDL to XML, if needed
     if config.Source.srctype == 'udl':
-        convert_udl(config, files)
+        convert_udl(cvt, config, files)
 
     # Append export notes to make export usable as a deployment 
     if config.Local.deployment:
@@ -50,12 +54,16 @@ def run(config, repo):
     total = sum(len(f.items) for f in files)
     logmsg= f"\nDone; exported {total} items to {len(files)} files.\n"
     logging.info(logmsg)
-    cleanup()
+    
+    if config.Source.srctype == 'udl' and cvt_cleanup:
+        cvt_cleanup()
+    cleanup_logging()
+    
     if not config.no_gui:
         msgbox(logmsg)
 
 
-def convert_udl(config, exports:list[ExportFile]):
+def convert_udl(convert, config, exports:list[ExportFile]):
     """ Converts all items from UDL to XML, where needed """
 
     to_convert = []
@@ -85,11 +93,26 @@ def get_repo(config):
     return get_data(config)
 
 
-def cleanup():
-    """ Cleanup for subsequent runs """
+def get_converter(config):
+    """Determine the UDL to XML converter: server or local"""
     
-    cleanup_convert()
-    cleanup_logging()
+    if config.Local.converter == 'iris':
+        # Use IRIS server as converter
+        import convert
+        return convert.convert, convert.setup_session, convert.cleanup
+    
+    # Use iris-udl-to-xml as converter
+    import udl2xml.main
+    
+    # Create function with signature compatible to IRIS converter
+    def convert(config:ns.Namespace, items:list[RepositorySourceItem], threads:int = 1):
+        for item in items:
+            try:
+                item.xml = udl2xml.main.convert(item.data)
+            except ValueError as e:
+                msg = f"Error converting {item.name} to XML: {e.args[0]}"
+                raise ValueError(msg) from None
+    return convert, None, None
 
 
 def cleanup_logging():

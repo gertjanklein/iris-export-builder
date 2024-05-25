@@ -152,6 +152,7 @@ def check(config:ns.Namespace):
     ns.check_oneof(local, 'export_version', (25, 26, '', None), '')
     if local.export_version == '':
         local.export_version = None
+    ns.check_oneof(local, 'converter', ('iris', 'builtin'), 'iris')
     
     # Check data configuration
     if src.datadir:

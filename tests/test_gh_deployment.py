@@ -35,7 +35,7 @@ def test_build(tmpdir, server_toml, get_build, validate_schema):
     if not server_toml:
         pytest.skip("No XML -> UDL server found.")
     
-    cfg = CFG.format(deployment='false') + "\n" + server_toml
+    cfg = CFG.format(deployment='false') + "\nconverter='iris'\n" + server_toml
     export = get_build(cfg, tmpdir)
     validate_schema(export, 'irisexport.xsd')
     # Check binary equality
@@ -48,9 +48,10 @@ def test_build_deployment(tmpdir, server_toml, get_build, validate_schema):
     """Check creating deployment."""
     
     if not server_toml:
-        pytest.skip("No XML -> UDL server found.")
+        cfg = CFG.format(deployment='true') + "converter='builtin'\n"
+    else:
+        cfg = CFG.format(deployment='true') + "\n" + server_toml
     
-    cfg = CFG.format(deployment='true') + "\n" + server_toml
     export = get_build(cfg, tmpdir)
     tree = etree.parse(BytesIO(export))
     # Can't CRC file, export notes contain timestamp. Check contents.

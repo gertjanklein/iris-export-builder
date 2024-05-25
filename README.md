@@ -20,8 +20,10 @@ GitHub. The local directory can be a checkout from any source control
 system. Alternatively, releases can be downloaded and created directly
 from a tag in a GitHub repository.
 
-UDL sources can be converted to XML; this needs a Caché/IRIS server to
-do the actual conversion.
+UDL sources can be converted to XML, using either built-in code, or an
+IRIS server to do the conversion. The latter is obviously safer, but
+requires more setup to get working, and may be less than ideal in CI/CD
+pipelines.
 
 Rudimentary support for converting the export into an Ensemble
 production

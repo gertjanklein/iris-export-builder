@@ -31,11 +31,11 @@ def test_data_in_udl_tree(server_toml, tmp_path, src_tree_udl, get_build):
     handling.
     """
 
-    if not server_toml:
-        pytest.skip("No XML -> UDL server found.")
-    
     cfg = CFG.format(path=src_tree_udl, srcdir='', datadir='')
-    cfg = f"{cfg}\nthreads=1\n{server_toml}"
+    if not server_toml:
+        cfg = f"{cfg}\nconverter='builtin'"
+    else:
+        cfg = f"{cfg}\nthreads=1\n{server_toml}"
 
     # Getting export should fail at an attempt to convert the lookup
     # table from UDL to XML
@@ -70,11 +70,11 @@ def test_data_separate(server_toml, tmp_path, src_tree_udl, get_build):
     """ Test that specifying data directory prevents UDL conversion.
     """
 
-    if not server_toml:
-        pytest.skip("No XML -> UDL server found.")
-    
     cfg = CFG.format(path=src_tree_udl, srcdir='', datadir='data')
-    cfg = f"{cfg}\nthreads=1\n{server_toml}"
+    if not server_toml:
+        cfg = f"{cfg}\nconverter='builtin'"
+    else:
+        cfg = f"{cfg}\nthreads=1\n{server_toml}"
 
     # Getting export should succeed, data directory not UDL to XML
     # converted
@@ -117,7 +117,7 @@ def test_error_no_server(tmp_path, get_build):
     """
 
     # Server definition that should fail (invalid port)
-    server_toml = "[Server]\nhost='localhost'\nport=55555\n"
+    server_toml = "converter='iris'\n[Server]\nhost='localhost'\nport=55555\n"
     cfg = CFG.format(path=tmp_path, srcdir='', datadir='')
     cfg = f"{cfg}\n{server_toml}"
 
