@@ -88,8 +88,9 @@ def add_deployment(config:ns.Namespace, name:str, root:etree._Element):
 def get_timestamps():
     """Returns UTC and local time in IRIS timestamp format"""
 
-    now = datetime.datetime.utcnow()
+    now = datetime.datetime.now(datetime.UTC)
     utc_ts = now.isoformat(sep=' ', timespec="seconds")
+    utc_ts = utc_ts.split('+', maxsplit=1)[0]
     now = now.replace(tzinfo=datetime.timezone.utc).astimezone(tz=None)
     local_ts = now.isoformat(sep=' ', timespec="seconds")[:19]
 
