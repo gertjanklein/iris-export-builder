@@ -51,6 +51,14 @@ There are several configuration sections in the file:
   slash) from the sources root. Supports asterisk-style wildcards.
   Example: `['/src/tests/*','/data/Test_*.lut']`
 
+* **take**: a list (enclosed in square brackets) of items to include in
+  the export. Items are specified as a path (including leading slash)
+  from the sources root. Supports asterisk-style wildcards. Example:
+  `['/src/tests/*','/data/Test_*.lut']`. If this list is empty, all
+  items will be included. If an item is present in both the `skip` and
+  `take` lists (or the latter is empty), the `skip` list takes
+  precedence.
+
 ## Section CSP
 
 (This section and the CSP.parsers sections are only needed if CSP files

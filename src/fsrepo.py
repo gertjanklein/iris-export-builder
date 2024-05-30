@@ -44,8 +44,13 @@ class FsRepo(Repository):
             norm = '/' + (name.replace(os.sep, '/') if os.sep != '/' else name)
             skip = any(rx.match(norm) for rx in self.config.skip_regexes)
             if skip:
-                logging.debug('Skipping %s because config requested so', name)
+                logging.debug('Skipping %s because item in "skip" list', name)
                 continue
+            
+            if self.config.take_regexes:
+                if not any(rx.match(norm) for rx in self.config.take_regexes):
+                    logging.debug('Skipping %s because not in "take" list', name)
+                    continue
             
             parts = name.split(os.sep)
 

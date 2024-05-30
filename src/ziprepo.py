@@ -51,13 +51,18 @@ class ZipRepo(Repository):
             if parts[-1][0] == '.':
                 continue
 
-            # Check for items we should skip (remove base directory name first)
+            # Check for items we should skip/take (remove base directory name first)
             tmp = '/' + name.split('/', 1)[1]
             skip = any(rx.match(tmp) for rx in self.config.skip_regexes)
             if skip:
-                logging.debug('Skipping %s because config requested so', tmp)
+                logging.debug('Skipping %s because item in "skip" list', name)
                 continue
-
+            
+            if self.config.take_regexes:
+                if not any(rx.match(tmp) for rx in self.config.take_regexes):
+                    logging.debug('Skipping %s because not in "take" list', name)
+                    continue
+            
             # Configure separately for CSP and source?
             encoding = self.config.Source.encoding
 

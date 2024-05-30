@@ -23,11 +23,18 @@ cspdir = 'csp'
 # Directory to search for data files to include, if any.
 datadir = 'data'
 
-# List of items to skip when building the export. Supports *-style wildcards.
-# The items are matched against their full path from the root of the repository.
+# List of items to skip when building the export. Supports *-style
+# wildcards. The items are matched against their full path in the
+# repository, e.g. '/src/Strix/Lib/String.cls'.
 skip = [
 ]
 
+# List of items to include in the export. Supports *-style wildcards. If
+# this list is empty, all items will be included. Items both in the skip
+# and take lists will be excluded. Items are matched against their full
+# path in the repository, e.g. '/src/Strix/Lib/String.cls'.
+take = [
+]
 
 # Details on what to do with CSP items
 [CSP]

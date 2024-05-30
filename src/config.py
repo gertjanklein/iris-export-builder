@@ -55,16 +55,17 @@ def get_config() -> ns.Namespace:
     # Make sure configuration is complete
     check(config)
     
-    # Converts specification(s) of files to skip to regexes
-    config.skip_regexes = []
-    for spec in config.Source.skip:
-        spec = spec.replace('\\', '\\\\')
-        spec = spec.replace('.', '\\.')
-        # Create valid regex for star
-        spec = spec.replace('*', '.*')
-        regex = re.compile(spec, re.I)
-        config.skip_regexes.append(regex)
-
+    # # Converts specification(s) of files to skip/take to regexes
+    for src, dst in (('skip', 'skip_regexes'), ('take', 'take_regexes')):
+        config[dst] = []
+        for spec in config.Source[src]:
+            spec = spec.replace('\\', '\\\\')
+            spec = spec.replace('.', '\\.')
+            # Create valid regex for star
+            spec = spec.replace('*', '.*')
+            regex = re.compile(spec, re.I)
+            config[dst].append(regex)
+    
     # Load token contents from file, if specified
     if config.Source.type == 'github' and config.GitHub.token and config.GitHub.token[0] == '@':
         path = config.GitHub.token[1:]
@@ -131,6 +132,7 @@ def check(config:ns.Namespace):
     ns.check_default(src, 'datadir', '')
     ns.check_default(src, 'cspdir', '')
     ns.check_default(src, 'skip', [])
+    ns.check_default(src, 'take', [])
     
     # Strip leading slash if present, we don't need it
     if src.srcdir == '/':
